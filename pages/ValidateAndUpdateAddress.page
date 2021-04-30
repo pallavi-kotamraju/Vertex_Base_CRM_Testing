@@ -1,0 +1,19 @@
+<apex:page showHeader="true" sidebar="true" standardController="Account" extensions="ValidateAndUpdateAddress">
+    <apex:form >
+        <apex:includeLightning />
+        <div id="lightning" />
+        <script>
+            $Lightning.use("Vertex:vertexAddressValidationApp", function() {
+                $Lightning.createComponent("Vertex:vertexAddressValidation", {
+                    recordId: '{!acctId}'
+                },
+                "lightning",
+                function(cmp) {
+                    console.log("LWC component was created");
+                }
+                );
+            });
+        </script>
+        <apex:commandButton action="{!ReturnRec}" value="Return to Account"/>
+    </apex:form>
+</apex:page>

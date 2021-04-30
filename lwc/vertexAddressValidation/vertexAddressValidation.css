@@ -1,0 +1,21 @@
+.cardBody{
+    padding: 0 17px;
+    width:100%;
+}
+
+.validationColumns{
+    text-align: center;
+    width: 200px;
+}
+/* 
+.validationColumns button{
+    margin-top: 15px;
+} */
+
+.validationColumns lightning-icon{
+    margin-bottom: 25px;
+}
+
+.addressUpdate{
+    height: 640px;
+}

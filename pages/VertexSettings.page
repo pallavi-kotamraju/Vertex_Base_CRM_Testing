@@ -1,0 +1,2474 @@
+<apex:page showHeader="true" standardStylesheets="true" controller="VertexSettingsController"
+    sidebar="false" applyHtmlTag="true" applyBodyTag="false" docType="html-5.0">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <head>
+            <title>Settings/Mappings Export/Import Process</title>
+            <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+            <apex:slds />
+            <apex:includeScript value="{!URLFOR($Resource.CSI_js, '/jquery.min.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.CSI_js, '/jquery-ui.min.js')}"/>
+
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+        </head>
+        <body>
+            <apex:form >
+
+            <apex:actionFunction name="rerenderAddresses" rerender="addressList" action="{!RefreshAddresses}" oncomplete="showValButtons();"/>
+            <apex:actionFunction name="rerenderFieldMappingsMain" rerender="fieldMappingPresets, fieldMappingsSectionMain" />
+            <apex:actionFunction name="rerenderFieldMappingsSub" rerender="fieldMappingPresets, fieldMappingsSectionSub" />
+            <apex:actionFunction name="refreshValidityTab" action="{!RefreshValidityChecks}" rerender="validityCheckSection" />
+            <apex:actionFunction name="deleteAllLogs" action="{!deleteAllLogs}" rerender="placeholder" />
+            <apex:actionFunction name="deleteOldLogs" action="{!deleteOldLogs}" rerender="placeholder" />
+
+            <div class="slds-scope">
+                <!-- MASTHEAD -->
+                <!-- / MASTHEAD -->    
+                <!-- PAGE HEADER -->
+                <div class="slds-page-header" role="banner">
+                    <div class="slds-grid">
+                        <div class="slds-col">
+                            <!-- HEADING AREA -->
+                            <div class="slds-media">
+                                <div class="slds-media__figure">
+                                    <img class="slds-icon slds-icon--large slds-icon-standard-user" src="{!URLFOR($Resource.VertLogo)}" style="padding:5px" />
+                                </div>
+                                <div class="slds-media__body">
+                                    <p class="slds-text-heading--label">Vertex Tax Link for Salesforce</p>
+                                    <h1 class="slds-text-heading--medium">Vertex Configuration</h1>
+                                </div>
+                            </div>
+                            <!-- HEADING AREA -->
+                        </div>
+                    </div>
+                    <div class="slds-grid slds-page-header__detail-row">
+                        <div class="slds-col--padded slds-size--1-of-4">
+                            <dl>
+                                <dt>
+                                    <p class="slds-text-heading--label slds-truncate">Where taxation meets innovation</p>
+                                </dt>
+                                <dd>
+                                    <p class="slds-text-body--regular slds-truncate">
+                                        Please complete the following configuration to make 
+                                        automatic tax calculations on any opportunities 
+                                        only a click away.</p>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <!-- / PAGE HEADER -->
+                <!-- Tab Panel -->
+                <div class="slds-tabs--scoped">
+                    <!-- TABS -->
+                    <ul class="slds-tabs--scoped__nav" role="tablist">
+                        <li class="slds-tabs--scoped__item slds-text-heading--label slds-active" title="Configuration" role="presentation">
+                            <a class="slds-tabs--scoped__link" href="#auth" role="tab" tabindex="0" aria-selected="true" aria-controls="tab-scoped-1" 
+                                id="tab-scoped-1__item" onclick="selectTab('main',this);">Configuration</a>
+                        </li>
+                        <li class="slds-tabs--scoped__item slds-text-heading--label" title="Addresses" role="presentation">
+                            <a class="slds-tabs--scoped__link" href="#address" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-2" 
+                                id="tab-scoped-2__item" onclick="selectTab('main',this);">Addresses</a>
+                        </li>
+                        <li class="slds-tabs--scoped__item slds-text-heading--label" title="Field Mappings" role="presentation">
+                            <a class="slds-tabs--scoped__link" href="#mapping" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-3" 
+                                id="tab-scoped-3__item" onclick="selectTab('main',this);">Field Mappings</a>
+                        </li>
+                        <li class="slds-tabs--scoped__item slds-text-heading--label" title="Logs" role="presentation">
+                            <a class="slds-tabs--scoped__link" href="#logs" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-4" 
+                                id="tab-scoped-4__item" onclick="selectTab('main',this);">Logs</a>
+                        </li>
+                        <li class="slds-tabs--scoped__item slds-text-heading--label" title="Validity Check" role="presentation">
+                            <a class="slds-tabs--scoped__link" href="#validity" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-5"
+                                id="tab-scoped-5__item" onclick="refreshValidityTab(); selectTab('main',this);">Validity Check</a>
+                        </li>
+                    </ul>
+
+                    <!-- TAB 1 -->
+                    <div id="tab-scoped-1" class="slds-tabs--scoped__content slds-show" role="tabpanel" aria-labelledby="tab-scoped-1__item">
+                        <div class="slds-grid slds-gutters">
+                            <!-- Authorization section -->
+                            <div class="slds-col slds-size_1-of-2">
+                                <div class="slds-notify slds-notify--alert slds-theme--success slds-m-bottom--small" id="areaLookupMessage" style="display: none">
+                                    <button class="slds-button slds-notify__close slds-button--icon-inverse" onclick="hideMessage('areaLookupMessage'); return false;" title="Close">
+                                        <svg aria-hidden="true" class="slds-button__icon">
+                                            <use xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/action-sprite/svg/symbols.svg#close')}"></use>
+                                        </svg>
+                                    </button>
+                                    <h2></h2>
+                                </div>
+                                <div class="slds-notify slds-notify--alert slds-theme--success slds-m-bottom--small" id="taxCalcMessage" style="display: none">
+                                    <button class="slds-button slds-notify__close slds-button--icon-inverse" onclick="hideMessage('taxCalcMessage'); return false;" title="Close">
+                                        <svg aria-hidden="true" class="slds-button__icon">
+                                            <use xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/action-sprite/svg/symbols.svg#close')}"></use>
+                                        </svg>
+                                    </button>
+                                    <h2></h2>
+                                </div>
+                                <fieldset class="slds-box slds-form-element slds-m-top--small">
+                                    <legend class="slds-form-element__label slds-form-element__label--top">Authentication</legend>
+                                    <form class="slds-form--stacked">
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="URL">Tax Area Lookup URL</label>
+                                            <div class="slds-form-element__control">
+                                                <input id="taxAreaURL" class="slds-input" type="text" value="{!config.TaxAreaLookupURL__c}" placeholder="ex: http://customdomain.vertexinc.com/vertex-ws/services/LookupTaxAreas70"/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="URL">Tax Calculation URL</label>
+                                            <div class="slds-form-element__control">
+                                                <input id="taxCalcURL" class="slds-input" type="text" value="{!config.TaxCalculationURL__c}" placeholder="ex: http://customdomain.vertexinc.com/vertex-ws/services/CalculateTax70"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="Username">Username</label>
+                                            <div class="slds-form-element__control">
+                                                <span id="hiddenJobId" type="text" value="" stye="display:none !important;" />
+                                                <input id="Username" class="slds-input" type="text" value="{!config.Username__c}" placeholder="ex: 'BobSmith'" />
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element">
+                                                <label class="slds-form-element__label" for="Password">Password</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="Password" class="slds-input" value="{!config.Password__c}" type="password"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element">
+                                                <label class="slds-form-element__label" for="TrustedId">Trusted Id</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="TrustedId" class="slds-input" value="{!config.TrustedId__c}" type="text"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element" style="margin-top:10px">
+                                            <div class="slds-form-element__control">
+                                                <label class="slds-checkbox" for="allowValidateAddr">
+                                                    <input type="checkbox" id="allowValidateAddr" onchange="setAddressValidationField(this.checked)"></input>
+                                                    <span class="slds-checkbox--faux"></span>
+                                                    <span class="slds-form-element__label">Allow Address Validation</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </fieldset>
+                            </div>
+
+                            <!-- Settings section -->
+                            <div class="slds-col slds-size_2-of-2 slds-p-left_small">
+                                <div class="slds-notify slds-notify--alert slds-theme--success slds-m-bottom--small" id="configurationMessageDiv" style="display: none">
+                                    <button class="slds-button slds-notify__close slds-button--icon-inverse" onclick="hideMessage('configurationMessageDiv'); return false;" title="Close">
+                                        <svg aria-hidden="true" class="slds-button__icon">
+                                            <use xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/action-sprite/svg/symbols.svg#close')}"></use>
+                                        </svg>
+                                    </button>
+                                    <h2></h2>
+                                </div>
+                                <fieldset class="slds-box slds-form-element slds-m-top--small">
+                                    <legend class="slds-form-element__label slds-form-element__label--top">General Settings</legend>
+                                    <form class="slds-form--compound">
+                                        <div class="slds-form-element__row">
+                                            <div class="slds-form-element slds-size--1-of-3">
+                                                <div id="divNumberOfErrors" class="slds-form-element__label">
+                                                    <abbr class="slds-required">* </abbr><label class="slds-form-element__label" for="companyName">Default Taxpayer Code</label>
+                                                    <div class="slds-form-element__control">
+                                                        <input id="companyName" class="slds-textarea" type="text" value="{!config.CompanyName__c}" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-3">
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-3">
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element">
+                                            <div id="divNumberOfErrors" class="slds-form-element__label">
+                                                <label class="slds-form-element__label" for="maxlineitems">Max line items for Synchronous Processing</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="maxlineitems" class="slds-textarea" type="text" value="{!FLOOR(config.MaximumLineItems__c)}" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-3">
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-3">
+                                        </div>
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <label class="slds-checkbox" for="allowPBR">
+                                                    <input name="default" type="checkbox" id="allowPBR" checked="checked"></input>
+                                                    <span class="slds-checkbox--faux"></span>
+                                                    <span class="slds-form-element__label">Allow Process Builder Requests</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </fieldset>
+                                
+                                <fieldset class="slds-box slds-form-element slds-m-top--medium">
+                                    <legend class="slds-form-element__label slds-form-element__label--top">Logging Settings</legend>
+                                    <form class="slds-form--stacked">
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__label">
+                                                <label class="slds-form-element__label" for="severity">Severity
+                                                    <select name="severity" id="severity" class="slds-select">
+                                                        <option>None</option>
+                                                        <option>Debug</option>
+                                                        <option>Error</option>
+                                                    </select>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element">
+                                            <div id="divNumberOfErrors" class="slds-form-element__label">
+                                                <label class="slds-form-element__label" for="maxlogrows">Max rows to log</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="maxlogrows" class="slds-textarea" type="text" value="{!FLOOR(config.MaximumLoggingRows__c)}" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <label class="slds-checkbox" for="asynchronousLogging">
+                                                    <input name="default" type="checkbox" id="asynchronousLogging" checked="checked"></input>
+                                                    <span class="slds-checkbox--faux"></span>
+                                                    <span class="slds-form-element__label">Asynchronous Logging (@future)</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </fieldset>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:20px; width:70%">
+                            <button class="slds-align_absolute-center slds-button slds-button--brand" onClick="runValidate(); return false;">Validate Credentials and Save</button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2 -->
+                    <div id="tab-scoped-2" class="slds-tabs--scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-2__item">
+                        <button class="slds-button slds-button--brand" onClick="processNewAddress(); return false;">New Address</button>
+                        <apex:outputPanel id="addressList">
+                            <apex:repeat value="{!AddressList}" var="addy">
+                                <fieldset class="slds-box slds-card slds-form-element slds-m-top--medium">
+                                    <legend class="slds-form-element__label slds-form-element__label--top">{!Addy.name}</legend>
+                                    <form class="slds-form--compound">
+                                        <div class="slds-form-element slds-size--1-of-2">
+                                            <label class="slds-form-element__label">Address 1</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static">{!Addy.Address1__c}</span>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-2" style="padding-left:0;">
+                                            <label class="slds-form-element__label">Address 2</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static">{!Addy.Address2__c}</span>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element__row">
+
+                                            <div class="slds-form-element slds-size--1-of-6">
+                                                <label class="slds-form-element__label">City</label>
+                                                <div class="slds-form-element__control slds-has-divider--bottom">
+                                                    <span class="slds-form-element__static">{!Addy.City__c}</span>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-6">
+                                                <label class="slds-form-element__label">State</label>
+                                                <div class="slds-form-element__control slds-has-divider--bottom">
+                                                    <span class="slds-form-element__static">{!Addy.State__c}</span>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-6">
+                                                <label class="slds-form-element__label">Postal Code</label>
+                                                <div class="slds-form-element__control slds-has-divider--bottom">
+                                                    <span class="slds-form-element__static">{!Addy.PostalCode__c}</span>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-6">
+                                                <label class="slds-form-element__label">Country</label>
+                                                <div class="slds-form-element__control slds-has-divider--bottom">
+                                                    <span class="slds-form-element__static">{!Addy.Country__c}</span>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-6">
+                                                <label class="slds-form-element__label">Tax Area ID</label>
+                                                <div class="slds-form-element__control slds-has-divider--bottom">
+                                                    <span class="slds-form-element__static">{!Addy.TaxAreaId__c}</span>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-6">
+                                                <label class="slds-form-element__label">Location Code</label>
+                                                <div class="slds-form-element__control slds-has-divider--bottom">
+                                                    <span class="slds-form-element__static">{!Addy.LocationCode__c}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <button class="slds-button slds-button--brand" onClick="editAddress('{!Addy.name}');return false;">Edit Address</button>
+                                                    <button class="slds-button slds-button--brand addyTaxBtn slds-hide" onClick="validateAddress('{!Addy.name}');return false;">
+                                                        Fetch Tax Area ID
+                                                    </button>
+                                                    <button class="slds-button slds-button--brand addyValidateBtn slds-hide" onClick="validateAddress('{!Addy.name}');return false;">
+                                                        Validate Address
+                                                    </button>
+                                                    <button class="slds-button slds-button--brand addyDeleteBtn slds-hide" style="display:{!IF(OR(Addy.name == 'Administrative Origin Address', Addy.name == 'Default Physical Origin Address'), 'none', 'inline')}" onClick="processDeleteAddress('{!Addy.Id}'); return false;">
+                                                        Delete Address
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </fieldset>
+                            </apex:repeat>
+                        </apex:outputPanel>
+                    </div>
+
+                    <!-- Field Mappings Tab -->
+                    <div id="tab-scoped-3" class="slds-tabs--scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-3__item">
+                        <apex:outputPanel id="fieldMappingsSectionMain" styleClass="slds-tabs--default">
+                            <div class="slds-spinner_container slds-hide">
+                                <div role="status" class="slds-spinner slds-spinner--large slds-spinner--brand">
+                                    <span class="slds-assistive-text">Loading</span>
+                                    <div class="slds-spinner__dot-a"></div>
+                                    <div class="slds-spinner__dot-b"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Start Custom Setting Tabs -->
+                            <apex:variable value="{!0}" var="tabNum" />
+                            <ul id="fieldMappingsTabList" class="slds-tabs--default__nav" role="tablist">
+                                <apex:repeat value="{!ItemMappings}" var="itm">
+                                    <li class="slds-tabs--default__item slds-text-heading--label {!IF(tabNum == 0, 'slds-active', '')}" title="{!itm.Name}" role="presentation" style="display:{!IF(itm.ID != null, 'block', 'none')}">
+                                        <a class="slds-tabs--default__link" href="#void" role="tab" tabindex="{!IF(tabNum == 0, '0', '-1')}" aria-selected="{!tabNum == 0}" aria-controls="tab-default-{!itm.ID}"
+                                            id="tab-default-{!itm.ID}__item" onclick="selectTab('sub',this);">{!itm.Name}</a>
+                                    </li>
+                                    <li title="New Mapping" role="presentation" style="display:{!IF(itm.ID == null, 'block', 'none')}">
+                                        <a class="slds-button slds-button_neutral" href="#void" role="tab" tabindex="-1" style="margin-left:10px" aria-selected="false" aria-controls="tab-default-" id="tab-default-__item" onclick="selectTab('sub',this);">New Mapping</a>
+                                    </li>
+                                    <apex:variable var="tabNum" value="{!tabNum + 1}" />
+                                </apex:repeat>
+                            </ul>
+                            <apex:variable value="{!0}" var="tabNum" />
+                            <apex:repeat value="{!ItemMappings}" var="itm">
+                                <div id="tab-default-{!itm.ID}" class="slds-tabs--default__content {!IF(tabNum == 0, 'slds-show', 'slds-hide')}" role="tabpanel" aria-labelledby="tab-default-{!itm.ID}__item" style="margin-left:15px">
+                                    <apex:outputPanel id="fieldMappingsSectionSub">
+
+                                        <fieldset class="slds-box slds-form-element slds-m-top--medium slds-form--compound" style="width:50%; border:0px; padding:0px">
+                                            <div class="slds-form-element__row">
+                                                <!-- Mapping Name -->
+                                                <div class="slds-form-element slds-size--1-of-3">
+                                                    <div class="slds-form-element__label">
+                                                        <label class="slds-form-element__label">
+                                                            <abbr class="slds-required">* </abbr>{!IF(itm.ID != null, 'Mapping Name', 'New Mapping Name')}
+                                                        </label>
+                                                        <div>
+                                                            <input id="mappingName-{!itm.ID}" style="width:150px" maxlength="18" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- XML Message radio select-->
+                                                <div class="slds-form-element slds-size--2-of-3">
+                                                    <div class="slds-form-element__label">
+                                                        <label class="slds-form-element__label">
+                                                            <abbr class="slds-required">* </abbr>Vertex XML Message
+                                                            <select id="xmlMessage-{!itm.ID}" class="slds-select">
+                                                                <option value="Quote">Quote</option>
+                                                                <option value="Invoice">Invoice</option>
+                                                                <option value="Distribute">Distribute</option>
+                                                            </select>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Transaction Type -->
+                                                <div class="slds-form-element slds-size--3-of-3">
+                                                    <div class="slds-form-element__label">
+                                                        <label class="slds-form-element__label">
+                                                            <abbr class="slds-required">* </abbr>Transaction Type
+                                                            <select id="transactionType-{!itm.ID}" class="slds-select">
+                                                                <option value="SALE">Sale</option>
+                                                                <option value="RENTAL">Rental</option>
+                                                                <option value="LEASE">Lease</option>
+                                                            </select>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+
+                                        <!-- Parent and child object columns -->
+                                        <div id="selectObjectsDiv" class="slds-grid slds-gutters" style="margin-top:20px; width:60%">
+                                            <div class="slds-col slds-size_1-of-2 slds-lookup" data-select="single" data-scope="single" data-typeahead="true">
+                                                <div class="slds-form-element__label">
+                                                    <label class="slds-form-element__label">
+                                                        <abbr class="slds-required">* </abbr>Transaction Object
+                                                    </label>
+                                                    <input id="parentObjName-{!itm.ID}" class="slds-input" type="text" aria-autocomplete="list" role="combobox" 
+                                                        aria-expanded="true" aria-activedescendant="" onkeyup="makeAutocompleteMap(this)" 
+                                                        onchange="RequeryLineObjOpts(this.value, '{!itm.ID}'); UpdateTransactionFieldOpts(this.value, '{!itm.ID}'); UpdateAdditionalTransMappingOpts($j('#transObjHeader-{!itm.ID}').text(), '{!itm.ID}', $j('#transLabelPicklist-{!itm.ID}-').val());"/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-col slds-size_2-of-2">
+                                                <div class="slds-form-element__label">
+                                                    <label class="slds-form-element__label">
+                                                        <abbr class="slds-required">* </abbr>Line Object
+                                                    </label>
+                                                    <select id="childObjPicklist-{!itm.ID}" class="slds-select" onchange="UpdateLineFieldOpts(this.value, '{!itm.ID}');">
+                                                        <option>Select Transaction Object</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Object Mappings -->
+                                        <fieldset class="slds-box slds-form-element slds-m-top--medium slds-form--compound" style="width:80%; margin-top:30px">
+                                            <div class="slds-form-element__row">
+                                                <!-- Required Mappings -->
+                                                <div class="slds-form-element slds-size--1-of-6">
+                                                    <div class="slds-form-element__label">
+                                                        <label class="slds-form-element__label">
+                                                            <abbr class="slds-required">* </abbr>Transaction Date
+                                                            <select id="transactionDate-{!itm.ID}" class="slds-select"> <!-- Linked to Transaction Object -->
+                                                                <option></option>
+                                                            </select>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="slds-form-element slds-size--1-of-6">
+                                                    <div class="slds-form-element__label">
+                                                        <label class="slds-form-element__label">
+                                                            <abbr class="slds-required">* </abbr>Document Number
+                                                            <select id="docNumber-{!itm.ID}" class="slds-select"> <!-- Linked to Transaction Object -->
+                                                                <option></option>
+                                                            </select>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <!-- Optional Mapping -->
+                                                <div class="slds-form-element slds-size--1-of-6">
+                                                    <div class="slds-form-element__label">
+                                                        <label class="slds-form-element__label">Transaction Tax Amount
+                                                            <select id="transactionTaxAmount-{!itm.ID}" class="slds-select"> <!-- Linked to Transaction Object -->
+                                                                <option>None</option>
+                                                            </select>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <!-- Required Mappings -->
+                                                <div class="slds-form-element slds-size--1-of-6">
+                                                    <div class="slds-form-element__label">
+                                                        <label class="slds-form-element__label">
+                                                            <abbr class="slds-required">* </abbr>Line Tax Amount
+                                                            <select id="lineTaxAmount-{!itm.ID}" class="slds-select"> <!-- Linked to Line Object -->
+                                                                <option></option>
+                                                            </select>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="slds-form-element slds-size--1-of-6">
+                                                    <div class="slds-form-element__label">
+                                                        <label class="slds-form-element__label">
+                                                            <abbr class="slds-required">* </abbr>Extended Price
+                                                            <select id="extPrice-{!itm.ID}" class="slds-select"> <!-- Linked to Line Object -->
+                                                                <option></option>
+                                                            </select>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="slds-form-element slds-size--1-of-6">
+                                                    <div class="slds-form-element__label">
+                                                        <label class="slds-form-element__label">
+                                                            <abbr class="slds-required">* </abbr>Quantity
+                                                            <select id="quantity-{!itm.ID}" class="slds-select"> <!-- Linked to Line Object -->
+                                                                <option></option>
+                                                            </select>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+
+                                        <apex:outputPanel rendered="{!NOT(ISBLANK(itm.ID))}" styleClass="slds-grid slds-gutters" style="margin-top:20px; width:70%">
+                                            <div id="transMappingsTable" class="slds-section slds-col" style="margin-right:15px">
+                                                <h3 id="transObjHeader-{!itm.ID}" class="slds-section-title--divider">{!BLANKVALUE(itm.ParentSObject__c, '[UNDEFINED]')}</h3>
+                                                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                                    <tr class="slds-text-title_caps">
+                                                        <th scope="col">Label</th>
+                                                        <th scope="col">Source Salesforce Field</th>
+                                                        <th scope="col">Actions</th>
+                                                    </tr>
+                                                    <apex:repeat value="{!BoundAdditionalTransItmMaps[itm.ID]}" var="row">
+                                                        <tr>
+                                                            <td>
+                                                                <select id="transLabelPicklist-{!itm.ID}-{!row.settingLoc}" class="slds-select" style="display:{!IF(row.label == null, 'inline', 'none')}"
+                                                                    onchange="UpdateAdditionalTransMappingOpts($j('#transObjHeader-{!itm.ID}').text(), '{!itm.ID}', this.value)">
+                                                                    <apex:repeat value="{!UnboundAdditionalTransItmMaps[itm.ID]}" var="opt">
+                                                                        <option value="{!opt.value}">{!opt.label}</option>
+                                                                    </apex:repeat>
+                                                                </select>
+                                                                
+                                                                <apex:outputText value="{!row.label}" rendered="{!row.label != null}" />
+                                                            </td>
+                                                            <td>
+                                                                <!-- New -->
+                                                                <select id="transSrcPicklist-{!itm.ID}-{!row.settingLoc}" class="slds-select" style="display:{!IF(row.label == null, 'inline', 'none')}">
+                                                                    <option value="" disabled="true">Select Salesforce Field...</option>
+                                                                    <option value=""></option>
+                                                                </select>
+                                                                
+                                                                <!-- Existing -->
+                                                                <apex:outputText value="{!row.sourceField}" rendered="{!row.label != null}" />
+                                                            </td>
+                                                            <td>
+                                                                <!-- New -->
+                                                                <apex:commandButton value="Add" onclick="AddAdditionalMap('{!itm.ID}', 'trans', this); return false;" rendered="{!row.label == null}" styleClass="slds-button slds-button_neutral" style="width:70px"/>
+                                                                <!-- Existing -->
+                                                                <apex:commandButton onclick="if(confirm('Delete field mapping?')){DeleteAdditionalMap('{!itm.ID}', 'Trans', '{!row.settingType}', '{!row.settingLoc}', this);} return false;" 
+                                                                    value="Delete" rendered="{!row.label != null}" styleClass="slds-button slds-button_neutral" style="width:70px"/>
+                                                            </td>
+                                                        </tr>
+                                                    </apex:repeat>
+                                                </table>
+                                            </div>
+                                            <div id="lineMappingsTable" class="slds-section slds-col" style="margin-left:15px">
+                                                <h3 id="lineObjHeader-{!itm.ID}" class="slds-section-title--divider">{!BLANKVALUE(itm.ChildSObject__c, '[UNDEFINED]')}</h3>
+                                                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                                    <tr class="slds-text-title_caps">
+                                                        <th scope="col">Label</th>
+                                                        <th scope="col">Source Salesforce Field</th>
+                                                        <th scope="col">Actions</th>
+                                                    </tr>
+                                                    <apex:repeat value="{!BoundAdditionalLineItmMaps[itm.ID]}" var="row">
+                                                        <tr>
+                                                            <td>
+                                                                <select id="lineLabelPicklist-{!itm.ID}-{!row.settingLoc}" class="slds-select" style="display:{!IF(row.label == null, 'inline', 'none')}"
+                                                                    onchange="UpdateAdditionalLineMappingOpts($j('#lineObjHeader-{!itm.ID}').text(), '{!itm.ID}', this.value)">
+                                                                    <apex:repeat value="{!UnboundAdditionalLineItmMaps[itm.ID]}" var="opt">
+                                                                        <option value="{!opt.value}">{!opt.label}</option>
+                                                                    </apex:repeat>
+                                                                </select>
+                                                    
+                                                                <apex:outputText value="{!row.label}" rendered="{!row.label != null}" />
+                                                            </td>
+                                                            <td>
+                                                                <!-- New -->
+                                                                <select id="lineSrcPicklist-{!itm.ID}-{!row.settingLoc}" class="slds-select" style="display:{!IF(row.label == null, 'inline', 'none')}">
+                                                                    <option value="" disabled="true">Select Salesforce Field...</option>
+                                                                    <option value=""></option>
+                                                                </select>
+                                                    
+                                                                <!-- Existing -->
+                                                                <apex:outputText value="{!row.sourceField}" rendered="{!row.label != null}" />
+                                                            </td>
+                                                            <td>
+                                                                <!-- New -->
+                                                                <apex:commandButton value="Add" onclick="AddAdditionalMap('{!itm.ID}', 'line', this); return false;" rendered="{!row.label == null}" styleClass="slds-button slds-button_neutral" style="width:70px"/>
+                                                                <!-- Existing -->
+                                                                <apex:commandButton onclick="if(confirm('Delete field mapping?')){DeleteAdditionalMap('{!itm.ID}', 'Line', '{!row.settingType}', '{!row.settingLoc}', this);} return false;" 
+                                                                    value="Delete" rendered="{!row.label != null}" styleClass="slds-button slds-button_neutral" style="width:70px"/>
+                                                            </td>
+                                                        </tr>
+                                                    </apex:repeat>
+                                                </table>
+                                            </div>
+                                        </apex:outputPanel>
+                                        
+                                        <!-- Buttons -->
+                                        <div style="margin-top:30px">
+                                            <apex:commandButton styleClass="slds-button slds-button--brand slds-m-right--medium" value="Save" onclick="SaveMapping('{!itm.ID}'); return false;" style="width:70px"/>
+                                            <apex:commandButton styleClass="slds-button slds-button--brand slds-m-right--medium" value="Clone" onclick="CloneMapping('{!itm.ID}'); return false;" rendered="{!NOT(ISBLANK(itm.ID))}" style="width:70px"/>
+                                            <apex:commandButton styleClass="slds-button slds-button--destructive slds-m-right--medium" value="Delete" onclick="if(confirm('Are you sure you want to delete this object mapping group?')){DeleteMapping('{!itm.ID}'); return false;}" rendered="{!NOT(ISBLANK(itm.ID))}" style="width:70px"/>
+                                            <apex:commandButton styleClass="slds-button slds-button--brand" value="Cancel" onclick="Refresh(); return false;" rendered="{!NOT(ISBLANK(itm.ID))}" style="width:70px"/>
+                                            <apex:commandButton styleClass="slds-button slds-button--brand" value="Cancel" onclick="if(confirm('Do you really want to cancel?')){rerenderFieldMappingsMain(); return false;}" rendered="{!ISBLANK(itm.ID)}" style="width:70px"/>
+                                        </div>
+
+                                        <div id="saveErrorMessage-{!itm.ID}" class="slds-notify slds-notify_alert slds-theme_error slds-m-top--small" style="display:none; width:50%">
+                                            <h2></h2>
+                                        </div>
+                                        <div id="cloneErrorMessage-{!itm.ID}" class="slds-notify slds-notify_alert slds-theme_error slds-m-top--small" style="display:none; width:50%">
+                                            <h2></h2>
+                                        </div>
+
+                                        <div class="slds-section slds-m-top--medium">
+                                            <h3 class="slds-section-title--divider" style="cursor:pointer" onclick="ToggleSection(this.nextElementSibling.id)">More Options
+                                                <i class="fa fa-arrow-circle-down" style="margin-left:10px"></i>
+                                            </h3>
+                                            <div class="slds-form--stacked slds-p-around--medium slds-m-bottom--x-small" id="hiddenSection-{!itm.ID}" style="display:none">
+                                                <apex:commandButton styleClass="slds-button slds-button--destructive" value="Reset All Mappings" onclick="if(confirm('Are you sure you want to delete all custom mappings and restore defaults?')){ResetAll(); return false;}" />
+                                            </div>
+                                        </div>
+
+                                    </apex:outputPanel>
+                                </div>
+                                <apex:variable var="tabNum" value="{!tabNum + 1}" />
+                            </apex:repeat>
+                        </apex:outputPanel>
+                    </div>
+
+                    <div id="tab-scoped-4" class="slds-tabs--scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-4__item">
+                        <!-- Job Details Section -->
+                        <div style="width:100%; text-align:right;">
+                            <button class="slds-button slds-button--destructive"  onClick="if(confirm('Delete all logs older than 1 month?')){ deleteOldLogs();  setTimeout(function(){buildLogTable();}, 2000);  return false; }">Delete Old Logs</button>
+                            <button class="slds-button slds-button--destructive"  onClick="if(confirm('Really delete all logs?')){ deleteAllLogs();  setTimeout(function(){buildLogTable();}, 2000);  return false; }">Delete All Logs</button>
+                        </div>
+                        <fieldset class="slds-box slds-form-element slds-m-top--medium">
+                            <legend class="slds-form-element__label slds-form-element__label--top">Logs History</legend>
+                            <form class="slds-form--stacked">
+                                <!-- Loading Spinner Branded -->
+                                <div class="slds-spinner_container slds-hide">
+                                    <div role="status" class="slds-spinner slds-spinner--large slds-spinner--brand">
+                                        <span class="slds-assistive-text">Loading</span>
+                                        <div class="slds-spinner__dot-a"></div>
+                                        <div class="slds-spinner__dot-b"></div>
+                                    </div>
+                                </div>
+                                <!-- TABLE -->
+                                <div id="table-container-custom"></div>
+                            </form>
+                        </fieldset>
+                    </div>
+
+                    <!-- Validity Check -->
+                    <div id="tab-scoped-5" class="slds-tabs--scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-5__item">
+                        <div class="slds-panel__section">
+                            <apex:outputPanel id="validityCheckSection">
+                                <p class="slds-truncate slds-text-body_small">
+                                    Unexpected errors may occur if custom settings have been incorrectly altered, or if you lack required field level permissions.
+                                    Use the information in this tab to determine the source of errors.  (Please refresh this page after making configuration changes).
+                                </p>
+                                <br/>
+                                <h3 class="slds-section-title--divider">
+                                    Invalid Object/Field Mappings
+                                    <i class="{!IF(fieldValidityResults.size == 0, 'fa fa-check', 'fa fa-exclamation-circle')}" style="margin-left:10px; font-size:32px; color:{!IF(fieldValidityResults.size == 0, 'green', 'red')}"></i>
+                                </h3>
+                                <div class="slds-form--stacked slds-p-around--medium slds-m-bottom--x-small">
+                                    <apex:repeat value="{!fieldValidityResults}" var="vResult">
+                                        <div>{!vResult}</div>
+                                    </apex:repeat>
+                                    <span style="display:{!IF(fieldValidityResults.size == 0, 'inline', 'none')}">
+                                        No invalid field mappings found
+                                    </span>
+                                </div>
+
+                                <h3 class="slds-section-title--divider">
+                                    Data Type Mismatches
+                                    <i class="{!IF(DataTypeResults.size == 0, 'fa fa-check', 'fa fa-exclamation-circle')}" style="margin-left:10px; font-size:32px; color:{!IF(DataTypeResults.size == 0, 'green', 'red')}"></i>
+                                </h3>
+                                <div class="slds-form--stacked slds-p-around--medium slds-m-bottom--x-small">
+                                    <apex:repeat value="{!DataTypeResults}" var="dtResult">
+                                        <div>{!dtResult}</div>
+                                    </apex:repeat>
+                                    <span style="display:{!IF(DataTypeResults.size == 0, 'inline', 'none')}">
+                                        No data type mismatches found in field mappings
+                                    </span>
+                                </div>
+                            
+                                <h3 class="slds-section-title--divider">
+                                    Insufficient Field Level Permissions
+                                    <i class="{!IF(fieldPermissionResults.size == 0, 'fa fa-check', 'fa fa-exclamation-circle')}" style="margin-left:10px; font-size:32px; color:{!IF(fieldPermissionResults.size == 0, 'green', 'red')}"></i>
+                                </h3>
+                                <div class="slds-form--stacked slds-p-around--medium slds-m-bottom--x-small">
+                                    <apex:repeat value="{!fieldPermissionResults}" var="fPerm">
+                                        <div>{!fPerm}</div>
+                                    </apex:repeat>
+                                    <span style="display:{!IF(fieldPermissionResults.size == 0, 'inline', 'none')}">
+                                        No insufficient field permissions found
+                                    </span>
+                                </div>
+
+                                <h3 class="slds-section-title--divider">
+                                    Incomplete Destination Mappings
+                                    <i class="{!IF(incompleteDestinationMappings.size == 0, 'fa fa-check', 'fa fa-exclamation-circle')}" style="margin-left:10px; font-size:32px; color:{!IF(incompleteDestinationMappings.size == 0, 'green', 'red')}"></i>
+                                </h3>
+                                <div class="slds-form--stacked slds-p-around--medium slds-m-bottom--x-small">
+                                    <apex:repeat value="{!incompleteDestinationMappings}" var="dMap">
+                                        <div>{!dMap}</div>
+                                    </apex:repeat>
+                                    <span style="display:{!IF(incompleteDestinationMappings.size == 0, 'inline', 'none')}">
+                                        No incomplete Destination Mappings found
+                                    </span>
+                                </div>
+                            </apex:outputPanel>
+                        </div>
+                    </div>
+
+                <!-- / Tab Panel -->
+                </div>
+
+                <!-- MODAL sections -->
+                <div>
+                    <div id="modalDiv" aria-hidden="false" role="dialog" class="slds-modal">
+                        <div id="modalLoading" style="transition:opacity 0.4s linear;z-index:99999; opacity:1; width:100%; height:100%; position:fixed;right:0;bottom:0;left:0;background:rgba(255,255,255,0.85);">
+                            <div class="slds-spinner--large" style="position:fixed; top:30%; left:45%;">
+                                <img src="{!URLFOR($Asset.SLDS, '/assets/images/spinners/slds_spinner_brand.gif')}" 
+                                    alt="Loading..." />
+                            </div>
+                        </div>
+                        
+                        <div class="slds-modal__container slds-container--medium">
+                            <div class="slds-modal__header">
+                                <h2 id="runBatchModalHeader" class="slds-text-heading--medium">Log Name Here</h2>
+                                <button class="slds-button slds-button--icon-inverse slds-modal__close" onclick="closeModalLog(); return false;">
+                                    <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large">
+                                        <use xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/action-sprite/svg/symbols.svg#close')}"></use>
+                                    </svg>
+                                    <span class="slds-assistive-text">Close</span>
+                                </button>
+                            </div>
+                        
+                            <div class="slds-modal__content slds-p-around--medium">
+                                <!-- Batch Details -->
+                                <!-- BOXED AREA -->
+                                <fieldset class="slds-theme--default">
+                                <!-- <legend id="newjobform" class="slds-text-heading--medium slds-p-vertical--medium">Edit</legend> -->
+                                <!-- CREATE NEW ACCOUNT FORM -->
+                                    <form class="slds-form--stacked">
+                                    
+                                        <div class="slds-form-element readOnlySlds slds-has-divider--bottom">
+                                            <label class="slds-form-element__label readOnlySldsField" for="logNameModal">Log Name</label>
+                                            <p class="readOnlySldsLabel" id="logNameModal"></p>
+                                        </div>
+                                        <div class="slds-form-element readOnlySlds slds-has-divider--bottom">
+                                            <label class="slds-form-element__label readOnlySldsField" for="endpointModal">Endpoint</label>
+                                            <p class="readOnlySldsLabel" id="endpointModal"></p>
+                                        </div>
+                                        <div class="slds-form-element readOnlySlds slds-has-divider--bottom">
+                                            <label class="slds-form-element__label readOnlySldsField" for="responseStatusModal">Response Status</label>
+                                            <p class="readOnlySldsLabel" id="responseStatusModal"></p>
+                                        </div>
+                                        <div class="slds-form-element readOnlySlds slds-has-divider--bottom">
+                                            <label class="slds-form-element__label readOnlySldsField" for="responseStatusCodeModal">Response Status Code</label>
+                                            <p class="readOnlySldsLabel" id="responseStatusCodeModal"></p>
+                                        </div>
+                                        <div class="slds-form-element readOnlySlds slds-has-divider--bottom">
+                                            <label class="slds-form-element__label readOnlySldsField" for="responseTimestamp">Timestamp</label>
+                                            <p class="readOnlySldsLabel" id="responseTimestamp"></p>
+                                        </div>
+                                        <div class="slds-form-element readOnlySlds slds-has-divider--bottom">
+                                            <label class="slds-form-element__label readOnlySldsField" for="detailsModal">Details</label>
+                                            <p class="readOnlySldsLabel" id="detailsModal"></p>
+                                        </div>
+                                        <div id="modalRequestDiv" class="slds-form-element readOnlySlds slds-has-divider--bottom">
+                                            <label class="slds-form-element__label readOnlySldsField" for="requestModal">Request</label>
+                                            <p class="readOnlySldsLabel" id="requestModal"></p>
+                                        </div>
+                                        <div class="slds-form-element slds-has-divider--bottom" style="padding-bottom:20px;">
+                                            <label class="slds-form-element__label readOnlySldsField" for="responseModal">Response</label>
+                                            <p class="readOnlySldsLabel" id="responseModal"></p>
+                                        </div>
+                                        
+                                        <!-- / Test -->
+                                    </form>
+                                <!-- CREATE NEW ACCOUNT FORM -->
+                                </fieldset>
+                                        <!-- / BOXED AREA -->
+                                        <!-- / Batch Details -->
+                            </div>
+                            
+                            <div class="slds-modal__footer">
+                                <div class="slds-x-small-buttons--horizontal">
+                                    <button class="slds-button slds-button--neutral" onclick="closeModalLog(); return false;">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modalDivBackDrop" class="slds-backdrop"></div>
+                </div>
+                <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal" id="modal">
+                    <div class="slds-modal__container">
+                        <div class="slds-modal__header">
+                            <h2 id="addressValidationHeader" class="slds-text-heading--medium">Address Validation</h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium">
+                            <fieldset class="slds-box slds-card slds-form-element slds-m-top--medium" id="addyCurrentBox">
+                                <legend class="slds-form-element__label slds-form-element__label--top">Current</legend>
+                                <form class="slds-form--compound">
+                                    <div class="slds-form-element slds-size--1-of-2">
+                                        <label class="slds-form-element__label">Address 1</label>
+                                        <div class="slds-form-element__control slds-has-divider--bottom">
+                                            <span class="slds-form-element__static" id="origAddress1"/>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-size--1-of-2" style="padding-left:0;">
+                                        <label class="slds-form-element__label">Address 2</label>
+                                        <div class="slds-form-element__control slds-has-divider--bottom">
+                                            <span class="slds-form-element__static" id="origAddress2"/>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element__row">
+                                        <div class="slds-form-element slds-size--1-of-4">
+                                            <label class="slds-form-element__label">City</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="origCity"/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-4">
+                                            <label class="slds-form-element__label">State</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="origState"/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-4">
+                                            <label class="slds-form-element__label">Postal Code</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="origPostalCode"/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-4">
+                                            <label class="slds-form-element__label">Country</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="origCountry"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element__row">
+                                        <div class="slds-form-element slds-size--1-of-2">
+                                            <label class="slds-form-element__label">Tax Area ID</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="origTaxAreaID"/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-2">
+                                            <label class="slds-form-element__label">Location Code</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="origLocationCode"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element">
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <button class="slds-button slds-button--brand" onClick="saveAddress('update');return false;">Assign Tax ID to Current Address</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </fieldset>
+                            <fieldset class="slds-box slds-card slds-form-element slds-m-top--medium" id="addyCorrectedBox">
+                                <legend class="slds-form-element__label slds-form-element__label--top">Corrected</legend>
+                                <form class="slds-form--compound" id="correctedAddress">
+                                    <div class="slds-form-element slds-size--1-of-2">
+                                        <label class="slds-form-element__label">Address 1</label>
+                                        <div class="slds-form-element__control slds-has-divider--bottom">
+                                            <span class="slds-form-element__static" id="correctedAddress1"/>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-size--1-of-2" style="padding-left:0;">
+                                        <label class="slds-form-element__label">Address 2</label>
+                                        <div class="slds-form-element__control slds-has-divider--bottom">
+                                            <span class="slds-form-element__static" id="correctedAddress2"/>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element__row">
+                                        <div class="slds-form-element slds-size--1-of-4">
+                                            <label class="slds-form-element__label">City</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="correctedCity"/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-4">
+                                            <label class="slds-form-element__label">State</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="correctedState"/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-4">
+                                            <label class="slds-form-element__label">Postal Code</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="correctedPostalCode"/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-4">
+                                            <label class="slds-form-element__label">Country</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="correctedCountry"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element__row">
+                                        <div class="slds-form-element slds-size--1-of-2">
+                                            <label class="slds-form-element__label">Tax Area ID</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="correctedTaxAreaID"/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-2">
+                                            <label class="slds-form-element__label">Location Code</label>
+                                            <div class="slds-form-element__control slds-has-divider--bottom">
+                                                <span class="slds-form-element__static" id="correctedLocationCode"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element">
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <button class="slds-button slds-button--brand" onClick="correctAddress();return false;">Change to this address</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div class="slds-form-element slds-size--1-of-2" id="noCorrection" style="display:none;">
+                                    <label class="slds-form-element__label">The Address is Valid</label>
+                                </div>
+                                <div class="slds-form-element slds-size--1-of-2" id="errorMsg" style="display:none;">
+                                    <label class="slds-form-element__label" id="errorMsgDisplay"></label>
+                                </div>
+                                <div class="slds-form-element" id="notUSA" style="display:none;">
+                                    <label class="slds-form-element__label">Addresses outside of the United States are not supported for validation</label>
+                                </div>
+                            </fieldset>
+                            <div class="slds-float--right" style="padding-top:10px;" id="CompareCancelButton">
+                                <button class="slds-button slds-button--brand " onClick="closeModal();return false;">Cancel</button>
+                            </div>
+                            
+                            <fieldset class="slds-box slds-card slds-form-element slds-m-top--medium" id="addyEditBox">
+                                <legend class="slds-form-element__label slds-form-element__label--top">Edit Address</legend>
+                                <form class="slds-form--compound">
+
+                                    <div id="acWrapper" class="slds-lookup" data-select="single" data-scope="single" data-typeahead="true">
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="Address1">Address 1</label>
+                                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                                <div class="slds-pill__container slds-hide"></div>
+                                                <input id="Address1" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-2" style="padding-left:0;">
+                                            <label class="slds-form-element__label" for="Address2">Address 2</label>
+                                            <div class="slds-form-element__control">
+                                                <input id="Address2" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant=""/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element__row" id="editPaneSecondRow">
+                                            <div class="slds-form-element slds-size--1-of-5" >
+                                                <label class="slds-form-element__label" for="city">City</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="city" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-5" >
+                                                <label class="slds-form-element__label" for="state">State</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="state" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant=""/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-5" >
+                                                <label class="slds-form-element__label" for="postalCode">Postal Code</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="postalCode" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-5" >
+                                                <label class="slds-form-element__label" for="country">Country</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="country" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element__row" id="editPaneThirdRow">
+                                            <div class="slds-form-element slds-size--1-of-4" id="taxCollectionField">
+                                                <label class="slds-form-element__label" for="taxAreaID">Tax Area ID</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="taxAreaID" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant=""/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-4" id="customerCodeField">
+                                                <label class="slds-form-element__label" for="CompanyCode">Customer Code</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="CompanyCode" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant=""/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-4" id="customerClassField">
+                                                <label class="slds-form-element__label" for="CompanyClassCode">Customer Class Code</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="CompanyClassCode" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant=""/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-4" id="locationCodeField">
+                                                <label class="slds-form-element__label" for="LocationCode">Location Code</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="LocationCode" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element">
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <button class="slds-button slds-button--brand" onClick="assignAndSaveAddress(); return false;">Save</button>
+                                                <button class="slds-button slds-button--brand" onClick="closeModal(); return false;">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </fieldset>
+
+                            <fieldset class="slds-box slds-card slds-form-element slds-m-top--medium" id="newAddressBox">
+                                <legend class="slds-form-element__label slds-form-element__label--top">New Address</legend>
+                                <form class="slds-form--compound">
+
+                                    <div id="acWrapper" class="slds-lookup" data-select="single" data-scope="single" data-typeahead="true">
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="newAddrName">Label (i.e. Main Office)</label>
+                                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                                <div class="slds-pill__container slds-hide"></div>
+                                                <input id="newAddrName" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="newAddress1">Address 1</label>
+                                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                                <div class="slds-pill__container slds-hide"></div>
+                                                <input id="newAddress1" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element slds-size--1-of-2" style="padding-left:0;">
+                                            <label class="slds-form-element__label" for="newAddress2">Address 2</label>
+                                            <div class="slds-form-element__control">
+                                                <input id="newAddress2" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant=""/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element__row" id="editPaneSecondRow">
+                                            <div class="slds-form-element slds-size--1-of-4" >
+                                                <label class="slds-form-element__label" for="newCity">City</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="newCity" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-4" >
+                                                <label class="slds-form-element__label" for="newState">State</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="newState" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant=""/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-4" >
+                                                <label class="slds-form-element__label" for="newPostalCode">Postal Code</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="newPostalCode" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-4" >
+                                                <label class="slds-form-element__label" for="newCountry">Country</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="newCountry" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element__row" id="editPaneThirdRow">
+                                            <div class="slds-form-element slds-size--1-of-2" id="taxCollectionField">
+                                                <label class="slds-form-element__label" for="newTaxAreaID">Tax Area ID</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="newTaxAreaID" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant=""/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-size--1-of-2">
+                                                <label class="slds-form-element__label" for="newLocationCode">Location Code</label>
+                                                <div class="slds-form-element__control">
+                                                    <input id="newLocationCode" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant=""/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element">
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <button class="slds-button slds-button--brand" onClick="assignAndAddNewAddress(); return false;">Save</button>
+                                                <button class="slds-button slds-button--brand" onClick="closeModal(); return false;">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </fieldset>
+
+                            <fieldset class="slds-box slds-card slds-form-element slds-m-top--medium" id="deleteAddressBox">
+                                <legend class="slds-form-element__label slds-form-element__label--top"></legend>
+                                <form class="slds-form--compound">
+                                    <p class="slds-text-body--regular slds-truncate" style="margin-bottom:20px">
+                                        Are you sure you want to permanently delete this saved address?
+                                    </p>
+                                    <div class="slds-form-element">
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <button class="slds-button slds-button--brand" onClick="deleteAddress(); return false;">Delete</button>
+                                                <button class="slds-button slds-button--brand" onClick="closeModal(); return false;">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-backdrop" id="backdrop"></div>
+                <!-- MODAL sections end -->
+            </div>
+
+        <script>
+            //  Variable load
+            var currentAddress;        //  Address currently saved
+            var newAddress = {};       //  New address to add
+            var addressIdToDelete;     //  ID of selected Address to delete
+            var pendingAddress;        //  Address returned by validation
+            var canConnect;            //  Vertex Connection Valid
+            var canValidateAddresses = {!config.AllowAddressValidation__c};  //Vertex Validation Enabled
+
+            //  Load jQuery no conflict
+            $j = jQuery.noConflict();
+            $j().ready( function() {
+                var inputs = $j(':input').keypress(function (e) {
+                    if (e.which == 13) {
+                        e.preventDefault();     //Stop default behavior of Enter key (which would reload the page)
+                        var nextInput = inputs.get(inputs.index(this) + 1);
+                        if (nextInput) 
+                            nextInput.focus();  //Try to tab over to the next input element instead
+                    }
+                });
+                
+                setPicklistValues();
+            });
+
+            function setPicklistValues(){
+                //  Set picklists since you can't with "value="
+                $j("#allowValidateAddr").prop('checked', {!config.AllowAddressValidation__c});
+                $j("#severity").val("{!JSENCODE(config.LoggingLevel__c)}");
+                $j("#allowPBR").prop('checked', {!config.AllowProcessBuilderRequests__c});
+                $j("#asynchronousLogging").prop('checked',{!config.AsynchronousLogging__c});
+            }
+
+            //============================================================
+            //  START FIELD MAPPINGS FUNCTIONS
+            //============================================================
+
+            function SaveMapping(settingID){
+                showHideSpinner(true);
+                var isNewSetting = settingID == '';
+
+                var mappingName = $j('#mappingName-' + settingID).val();
+                if (isNewSetting == false)
+                    $j('#fieldMappingsTabList > li.slds-active > a').text(mappingName);  //Update tab header
+                
+                var xmlMessage = $j('#xmlMessage-' + settingID).val();
+                var transactionType = $j('#transactionType-' + settingID).val();
+                
+                var lineObjJSON;
+                if ($j('#childObjPicklist-' + settingID).val().includes('{"childObj":'))    //Check if it has an actual JSON value
+                    lineObjJSON = JSON.parse($j('#childObjPicklist-' + settingID).val());
+
+                var objMapPattern =
+                {
+                    'settingID': settingID,
+                    'mappingName': mappingName,
+                    'parentObj': $j('#parentObjName-' + settingID).val(),
+                    'lineObj': lineObjJSON != null ? lineObjJSON.childObj : null,
+                    'parentLookup': lineObjJSON != null ? lineObjJSON.parentLookup : null,
+                    'relationshipName': lineObjJSON != null ? lineObjJSON.relationshipName : null,
+                    'xmlMessage': xmlMessage,
+                    'transactionType': transactionType,
+                    'transactionTaxAmount': $j('#transactionTaxAmount-' + settingID).val(),
+                    'transactionDate': $j('#transactionDate-' + settingID).val(),
+                    'documentNumber': $j('#docNumber-' + settingID).val(),
+                    'taxAmount': $j('#lineTaxAmount-' + settingID).val(),
+                    'extendedPrice': $j('#extPrice-' + settingID).val(),
+                    'quantity': $j('#quantity-' + settingID).val()
+                };
+
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.SaveItemMapping}',
+                    objMapPattern,
+                    function (result, event) {
+                        if (result == null){
+                            if (isNewSetting == true)
+                                rerenderFieldMappingsMain();
+                            else
+                                rerenderFieldMappingsSub();
+                        } else {
+                            $j('#saveErrorMessage-' + settingID + ' > h2').html(result);
+                            $j('#saveErrorMessage-' + settingID).show(200);
+                        }
+                        showHideSpinner(false);
+                    },
+                    { escape: false }
+                );
+            }
+            
+            var clonedSettingID;
+
+            function CloneMapping(settingID){
+                showHideSpinner(true);
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.CloneItemMapping}',
+                    settingID,
+                    function (result, event) {
+                        if (result != null && result != undefined && result != 'undefined'){
+                            if (!result.startsWith('Error:')){
+                                clonedSettingID = result[0];   //This tab will be able to be selected after the rerender
+                                rerenderFieldMappingsMain();
+                                //Hide the spinner in the rerendered Javascript block that runs on page load
+                            } else {
+                                $j('#cloneErrorMessage-' + settingID + ' > h2').html(result);
+                                $j('#cloneErrorMessage-' + settingID).show(200);
+                                showHideSpinner(false);
+                            }
+                        }
+                    },
+                    { escape: false }
+                );
+            }
+
+            function DeleteMapping(settingID){
+                showHideSpinner(true);
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.DeleteItemMapping}',
+                    settingID,
+                    function (result, event) {
+                        rerenderFieldMappingsMain();
+                        showHideSpinner(false);
+                    },
+                    { escape: false }
+                );
+            }
+
+            function Refresh(){
+                showHideSpinner(true);
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.Refresh}',
+                    function (result, event) {
+                        rerenderFieldMappingsSub();
+                        showHideSpinner(false);
+                    },
+                    { escape: false }
+                );
+            }
+
+            function ResetAll(){
+                showHideSpinner(true);
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.ResetAllMappings}',
+                    function (result, event) {
+                        rerenderFieldMappingsMain();
+                        showHideSpinner(false);
+                    },
+                    { escape: false }
+                );
+            }
+
+            function AddAdditionalMap(settingID, objLevel, btnElem){
+                var selectedOpt = $j('#' + objLevel + 'LabelPicklist-' + settingID + '-').val();
+                if (selectedOpt != null){
+                    btnElem.value = 'Adding...';
+                    btnElem.disabled = 'disabled';
+
+                    var mappingType;
+                    if (selectedOpt.includes('obj: '))
+                        mappingType = 'obj';
+                    else if (selectedOpt.includes('dest: '))
+                        mappingType = 'dest';
+                    else if (selectedOpt.includes('fld: '))
+                        mappingType = 'fld';
+                    else if (selectedOpt.includes('orig-admin: '))
+                        mappingType = 'orig-admin';
+                    else if (selectedOpt.includes('orig-phys: '))
+                        mappingType = 'orig-phys';
+                    
+                    var targetLoc = selectedOpt.substring(selectedOpt.lastIndexOf(': ') + 1).trim();
+                    var valueToWrite = $j('#' + objLevel + 'SrcPicklist-' + settingID + '-').val();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.VertexSettingsController.AddAdditionalMapping}',
+                        settingID,
+                        objLevel == 'trans' ? 'transaction' : 'line',
+                        mappingType,
+                        targetLoc,
+                        valueToWrite,
+                        function (result, event) {
+                            rerenderFieldMappingsSub();
+                        },
+                        { escape: false }
+                    );
+                }
+            }
+
+            function DeleteAdditionalMap(settingID, objLevel, mappingType, mappingLoc, btnElem){
+                btnElem.value = 'Deleting...';
+                btnElem.disabled = 'disabled';
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.DeleteAdditionalMapping}',
+                    settingID,
+                    objLevel,
+                    mappingType,
+                    mappingLoc,
+                    function (result, event) {
+                        rerenderFieldMappingsSub();
+                    },
+                    { escape: false }
+                );
+            }
+
+            function ToggleSection(sectionId) {
+                var elem = document.getElementById(sectionId);
+                if (elem.style.display == 'block')
+                    elem.style.display = 'none';
+                else
+                    elem.style.display = 'block';
+                return false;
+            }
+
+            function RequeryLineObjOpts(parentObj, settingID, preselectChildObj = null, preselectParentLookup = null){
+                if (parentObj != null && parentObj != ''){
+                    $j('#lineObjHeader-' + settingID).text('[Undefined]');
+                    $j('#childObjPicklist-' + settingID).prop('disabled', 'disabled');
+                    $j('#childObjPicklist-' + settingID).html('');  //Clear all options
+                    $j('#childObjPicklist-' + settingID).append($j('<option>', { value: null, text: 'Requerying...', selected: true }));
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.VertexSettingsController.getChildObjects}',
+                        parentObj,
+                        function (result, event) {
+                            $j('#childObjPicklist-' + settingID).prop('disabled', false);
+                            if (result.length == 0){
+                                $j('#childObjPicklist-' + settingID + ' option:first-child').html('No child relationships found');
+                            } else {
+                                $j('#childObjPicklist-' + settingID + ' option:first-child').html('');  //Blank first option
+                                var jsonElem;
+                                for (var i = 0; i < result.length; i++){
+                                    jsonElem = JSON.parse(result[i]);
+                                    var isSelected = false;     //Allow preselection on page load/rerender
+                                    if (preselectChildObj == jsonElem.childObj && preselectParentLookup == jsonElem.parentLookup)
+                                        isSelected = true;
+                                    $j('#childObjPicklist-' + settingID).append($j('<option>', { value: result[i], 
+                                                                                                 text: jsonElem.childObj + ' ... (' + jsonElem.parentLookup + ')',
+                                                                                                 selected: isSelected }));
+                                }
+                            }
+
+                            //Now set the dependent Line Object fields
+                            var lineObjVal = $j('#childObjPicklist-' + settingID).val();
+                            if (lineObjVal.includes('{"childObj":')){
+                                //Line Object selected
+                                UpdateLineFieldOpts(lineObjVal, settingID);
+                            } else {
+                                ClearLineFieldOpts(settingID);
+                            }
+                        },
+                        { escape: false }
+                    );
+                } else {
+                    $j('#transObjHeader-' + settingID).text('[Undefined]');
+                }
+            }
+
+            function UpdateTransactionFieldOpts(transObj, settingID){
+                if (transObj == null || transObj == ''){
+                    $j('#transObjHeader-' + settingID).text('[Undefined]');
+                    ClearTransactionFieldOpts(settingID);
+                } else {
+                    $j('#transObjHeader-' + settingID).text(transObj);
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.VertexSettingsController.UpdateFldList}',
+                        transObj,
+                        function (result, event) {
+                            if (event.status) {
+                                var $transTaxAmount = $j('#transactionTaxAmount-' + settingID);
+                                var $transDate = $j('#transactionDate-' + settingID);
+                                var $docNum = $j('#docNumber-' + settingID);
+                                var picklists = [$transTaxAmount, $transDate, $docNum];
+                                if (result.length > 0) {
+                                    for (var i = 0; i < picklists.length; i++)
+                                        picklists[i].html('');  //children('option[value]').remove();
+
+                                    var noneOp = document.createElement('option');
+                                    noneOp.value = 'None';
+                                    noneOp.text = 'None';
+                                    $transTaxAmount[0].appendChild(noneOp.cloneNode(true));
+
+                                    for (i = 0; i < result.length; i++) {
+                                        var op = document.createElement('option');
+                                        op.value = result[i].api;
+                                        op.text = result[i].name;
+
+                                        $transTaxAmount[0].appendChild(op.cloneNode(true));
+                                        $transDate[0].appendChild(op.cloneNode(true));
+                                        $docNum[0].appendChild(op.cloneNode(true));
+                                    }
+                                }
+
+                                //Select saved values
+                                Visualforce.remoting.Manager.invokeAction(
+                                    '{!$RemoteAction.VertexSettingsController.getItemMappingsRA}',
+                                    function (result, event) {
+                                        $j('#transactionTaxAmount-').val('');
+                                        $j('#transactionDate-').val('');
+                                        $j('#docNumber-').val('');
+                                        for (var i = 0; i < result.length; i++) {
+                                            if (result[i]) {
+                                                $j('#transactionTaxAmount-' + result[i].Id).val(result[i].{!NamespacePrefix}TransactionTaxAmount__c);
+                                                $j('#transactionDate-' + result[i].Id).val(result[i].{!NamespacePrefix}TransactionDate__c);
+                                                $j('#docNumber-' + result[i].Id).val(result[i].{!NamespacePrefix}TransactionNumber__c);
+                                            }
+                                        }
+                                    },
+                                    { escape: true }
+                                );
+
+                            } else if (event.type === 'exception') {
+                                alert('I\'m sorry but an error has occurred');
+                            } else {
+                                alert('A critical failure has happened');
+                                document.getElementById("responseErrors").innerHTML = event.message;
+                            }
+                        },
+                        { escape: true }
+                    );
+                }
+            }
+
+            function UpdateLineFieldOpts(lineObjJSONString, settingID) {
+                if (lineObjJSONString == null || lineObjJSONString == ''){
+                    $j('#lineObjHeader-' + settingID).text('[Undefined]');
+                    ClearLineFieldOpts(settingID);
+                } else {
+                    var lineObjJSON = JSON.parse(lineObjJSONString);
+                    var currentObj = lineObjJSON.childObj;
+                    $j('#lineObjHeader-' + settingID).text(currentObj);
+                
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.VertexSettingsController.UpdateFldList}',
+                        currentObj,
+                        function (result, event) {
+                            if (event.status) {
+                                var $taxAmountSelect = $j('#lineTaxAmount-' + settingID);
+                                var $extPriceSelect = $j('#extPrice-' + settingID);
+                                var $quantitySelect = $j('#quantity-' + settingID);
+                                var picklists = [$taxAmountSelect, $extPriceSelect, $quantitySelect];
+
+                                if (result.length > 0){
+                                    for (var i = 0; i < picklists.length; i++)
+                                        picklists[i].html('');  //children('option[value]').remove();
+                                    
+                                    for (i = 0; i < result.length; i++) {
+                                        var op = document.createElement('option');
+                                        op.value = result[i].api;
+                                        op.text = result[i].name;
+                                        
+                                        $taxAmountSelect[0].appendChild(op.cloneNode(true));
+
+                                        if (result[i].dataType == 'integer') {
+                                            $quantitySelect[0].appendChild(op.cloneNode(true));
+                                            $extPriceSelect[0].appendChild(op.cloneNode(true));
+                                        }
+
+                                        if (result[i].dataType == 'double') {
+                                            $quantitySelect[0].appendChild(op.cloneNode(true));
+                                            $extPriceSelect[0].appendChild(op.cloneNode(true));
+                                        }
+
+                                        if (result[i].dataType == 'currency')
+                                            $extPriceSelect[0].appendChild(op.cloneNode(true));
+                                    }
+                                }
+
+                                //Select saved values
+                                Visualforce.remoting.Manager.invokeAction(
+                                    '{!$RemoteAction.VertexSettingsController.getItemMappingsRA}',
+                                    function (result, event) {
+                                        $j('#lineTaxAmount-').val('');
+                                        $j('#extPrice-').val('');
+                                        $j('#quantity-').val('');
+                                        for (var i = 0; i < result.length; i++) {
+                                            if (result[i]) {
+                                                $j('#lineTaxAmount-' + result[i].Id).val(result[i].{!NamespacePrefix}ItemTaxField__c);
+                                                $j('#extPrice-' + result[i].Id).val(result[i].{!NamespacePrefix}ItemPriceField__c);
+                                                $j('#quantity-' + result[i].Id).val(result[i].{!NamespacePrefix}ItemQuantityField__c);
+                                            }
+                                        }
+                                    },
+                                    { escape: true }
+                                );
+
+                            } else if (event.type === 'exception') {
+                                alert('I\'m sorry but an error has occurred');
+                            } else {
+                                alert('A critical failure has happened');
+                                document.getElementById("responseErrors").innerHTML = event.message;
+                            }
+                        },
+                        { escape: true }
+                    );
+                }
+            }
+
+            function ClearTransactionFieldOpts(settingID) {
+                $j('#transactionTaxAmount-' + settingID).html('');
+                $j('#transactionDate-' + settingID).html('');
+                $j('#docNumber-' + settingID).html('');
+            }
+
+            function ClearLineFieldOpts(settingID) {
+                $j('#lineTaxAmount-' + settingID).html('');
+                $j('#extPrice-' + settingID).html('');
+                $j('#quantity-' + settingID).html('');
+            }
+
+            function UpdateAdditionalTransMappingOpts(obj, settingID, selectedMapping){
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.UpdateFldList}',
+                    obj,
+                    function (result, event) {
+                        if (event.status) {
+                            if (result.length > 0) {
+                                $sourcePicklist = $j('#transSrcPicklist-' + settingID + '-');   //No need for the row label after the second dash, because it will always be blank
+                                $sourcePicklist.html('');
+
+                                for (i = 0; i < result.length; i++) {
+                                    var op = document.createElement('option');
+                                    op.value = result[i].api;
+                                    op.text = result[i].name;
+                                    
+                                    if (result[i].dataType == 'date' && selectedMapping.includes('Posting_Date__c')){
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else if (result[i].dataType != 'date' && result[i].dataType != 'datetime' && !selectedMapping.includes('Posting_Date__c')){
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    }
+                                }
+                            }
+                        } else if (event.type === 'exception') {
+                            alert('I\'m sorry but an error has occurred');
+                        }
+                    },
+                    { escape: true }
+                );
+            }
+
+            function UpdateAdditionalLineMappingOpts(obj, settingID, selectedMapping) {
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.UpdateFldList}',
+                    obj,
+                    function (result, event) {
+                        if (event.status) {
+                            if (result.length > 0) {
+                                $sourcePicklist = $j('#lineSrcPicklist-' + settingID + '-');   //No need for the row label after the second dash, because it will always be blank
+                                $sourcePicklist.html('');
+
+                                for (i = 0; i < result.length; i++) {
+                                    var op = document.createElement('option');
+                                    op.value = result[i].api;
+                                    op.text = result[i].name;
+                                    
+                                    //Filter the data types of the returned fields (mainly for the "number" and "date" flex fields)
+                                    if (result[i].dataType == 'integer' && selectedMapping.includes('Line Number')) {
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else if (result[i].dataType == 'double' && selectedMapping.includes('Line Number')) {
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else if (result[i].dataType == 'currency' && selectedMapping.includes('Line Number')) {
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else if (result[i].dataType == 'date' && selectedMapping.includes('Line Date')) {
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else if (result[i].dataType == 'textarea' && (selectedMapping.includes('ItemTaxNotesField__c') || 
+                                            selectedMapping.includes('InvoiceTextCodes__c') || selectedMapping.includes('TaxCode__c') || 
+                                            selectedMapping.includes('VertexTaxCode__c'))){
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else if (result[i].dataType == 'string' && (selectedMapping.includes('InvoiceTextCodes__c') || 
+                                            selectedMapping.includes('TaxCode__c') || selectedMapping.includes('VertexTaxCode__c'))){
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else if (result[i].dataType == 'boolean' && (selectedMapping.includes('SuppressTaxCallout__c'))){
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else if(result[i].dataType == 'boolean' && (selectedMapping.includes('TaxIncludedIndicator__c'))){
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else if(result[i].dataType == 'string' && (selectedMapping.includes('UsageCode__c'))){
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    }else if(result[i].dataType == 'string' && (selectedMapping.includes('UsageClass__c'))){
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    }
+                                    else if (result[i].dataType != 'date' && result[i].dataType != 'datetime' && 
+                                        (selectedMapping.includes('Line Text') || selectedMapping.includes('ItemClassField__c') || 
+                                        selectedMapping.includes('InputTotalTax__c') || selectedMapping.includes('ChildSourcePicklist__c') || 
+                                        selectedMapping.includes('ItemTaxPayerField__c') ||  selectedMapping.includes('ItemNameField__c') || 
+                                        selectedMapping.includes('LineDeliveryTerm__c') || selectedMapping.includes('CommodityCode__c') || 
+                                        selectedMapping.includes('Address1__c') || selectedMapping.includes('Address2__c') || 
+                                        selectedMapping.includes('City__c') || selectedMapping.includes('Country__c') || 
+                                        selectedMapping.includes('CustomerClassCode__c') || selectedMapping.includes('CustomerCode__c') || 
+                                        selectedMapping.includes('PostalCode__c') || selectedMapping.includes('State__c') || 
+                                        selectedMapping.includes('TaxAreaID__c') || selectedMapping.includes('LocationCode__c') ||
+                                        selectedMapping.includes('TaxCalloutStatus__c') || selectedMapping.includes('CommodityCodeType__c'))) {
+                                        
+                                        //No restriction on data type
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    }
+                                }
+                            }
+                        } else if (event.type === 'exception') {
+                            alert('I\'m sorry but an error has occurred');
+                        }
+                    },
+                    { escape: true }
+                );
+            }
+
+            //============================================================
+            //  END FIELD MAPPINGS FUNCTIONS
+            //============================================================
+
+            /*
+                Javascript here is used to manage the modal(s) and button(s) visibility
+            */
+            
+            function modal_addressCompare_nonUSA() {
+                $j("#addyEditBox").hide();
+                $j("#newAddressBox").hide();
+                $j("#deleteAddressBox").hide();
+                $j("#addyCurrentBox").show();
+                $j("#addyCorrectedBox").show();
+                $j("#correctedAddress").hide();
+                $j("#noCorrection").hide();
+                $j("#notUSA").show();
+                $j("#CompareCancelButton").show();
+                $j("#errorMsg").hide();
+            }
+
+            function modal_addressCompare_matching(){
+                $j("#addyEditBox").hide();
+                $j("#newAddressBox").hide();
+                $j("#deleteAddressBox").hide();
+                $j("#addyCurrentBox").show();
+                $j("#addyCorrectedBox").show();
+                $j("#correctedAddress").hide();
+                $j("#noCorrection").show();
+                $j("#notUSA").hide();
+                $j("#CompareCancelButton").show();
+                $j("#errorMsg").hide();
+            }
+
+            function modal_addressCompare_ERROR(){
+                $j("#addyEditBox").hide();
+                $j("#newAddressBox").hide();
+                $j("#deleteAddressBox").hide();
+                $j("#addyCurrentBox").show();
+                $j("#addyCorrectedBox").show();
+                $j("#correctedAddress").hide();
+                $j("#noCorrection").hide();
+                $j("#notUSA").hide();
+                $j("#CompareCancelButton").show();
+                $j("#errorMsg").show();
+            }
+
+            function modal_addressCompare_nonmatching(){
+                $j("#addyEditBox").hide();
+                $j("#newAddressBox").hide();
+                $j("#deleteAddressBox").hide();
+                $j("#addyCurrentBox").show();
+                $j("#addyCorrectedBox").show();
+                $j("#correctedAddress").show();
+                $j("#noCorrection").hide();
+                $j("#notUSA").hide();
+                $j("#CompareCancelButton").show();
+                $j("#errorMsg").hide();
+            }
+
+            function modal_addressTaxAreaID_Only(){
+                $j("#addyEditBox").hide();
+                $j("#newAddressBox").hide();
+                $j("#deleteAddressBox").hide();
+                $j("#addyCurrentBox").show();
+                $j("#addyCorrectedBox").hide();
+                $j("#correctedAddress").hide();
+                $j("#noCorrection").hide();
+                $j("#notUSA").hide();
+                $j("#CompareCancelButton").show();
+                $j("#errorMsg").hide();
+            }
+
+            function modal_addressEdit(){
+                $j("#addyEditBox").show();
+                $j("#newAddressBox").hide();
+                $j("#deleteAddressBox").hide();
+                $j("#addyCurrentBox").hide();
+                $j("#addyCorrectedBox").hide();
+                $j("#CompareCancelButton").hide();
+                $j("#errorMsg").hide();
+            }
+
+            function modal_addressAdd(){
+                $j("#addyEditBox").hide();
+                $j("#newAddressBox").show();
+                $j("#deleteAddressBox").hide();
+                $j("#addyCurrentBox").hide();
+                $j("#addyCorrectedBox").hide();
+                $j("#CompareCancelButton").hide();
+                $j("#errorMsg").hide();
+            }
+
+            function modal_addressDelete(){
+                $j("#addyEditBox").hide();
+                $j("#newAddressBox").hide();
+                $j("#deleteAddressBox").show();
+                $j("#addyCurrentBox").hide();
+                $j("#addyCorrectedBox").hide();
+                $j("#CompareCancelButton").hide();
+                $j("#errorMsg").hide();
+            }
+
+            function showValButtons(){
+                if (canValidateAddresses==true){
+                    $j(".addyValidateBtn").removeClass('slds-hide');
+                    $j(".addyTaxBtn").addClass('slds-hide');
+                    $j("#addressValidationHeader").text('Address Validation');
+
+                }
+                else{
+                    $j(".addyValidateBtn").addClass('slds-hide');
+                    $j(".addyTaxBtn").removeClass('slds-hide');
+                    $j("#addressValidationHeader").text('Address Tax Area ID');
+                }
+            }
+
+            function openModalLog(logId) {
+                $j("#modalDiv").addClass('slds-fade-in-open');
+                $j("#modalDivBackDrop").addClass('slds-backdrop--open');
+
+                // query
+                queryLogRecord(logId);
+            }
+
+            function closeModalLog() {
+                $j("#modalLoading").removeClass('slds-hide');
+                $j("#modalDiv").removeClass('slds-fade-in-open');
+                $j("#modalDivBackDrop").removeClass('slds-backdrop--open');
+            }
+            
+            //Modal Open
+            function openModal(){
+                $j('#backdrop').addClass('slds-backdrop--open');
+                $j('#modal').addClass('slds-fade-in-open');
+                $j("#modalLoading").addClass('slds-hide');
+            }
+
+            //Modal Close
+            function closeModal(){
+                $j("#modalLoading").removeClass('slds-hide');
+                $j('#modal').removeClass('slds-fade-in-open');
+                $j('#backdrop').removeClass('slds-backdrop--open');
+            }
+
+            /*********************************************/
+
+            //  Runs the validation script, testing entered username/pass against Vertex from buttonpress
+            function runValidate(){
+                hideMessage('areaLookupMessage');
+                hideMessage('configurationMessageDiv');
+                var missingFields1 = '';
+                var missingFields2 = '';
+                var haveCreds = true;
+                if ($j("#taxAreaURL").val() == '' || $j("#taxCalcURL").val() == '' || ((($j("#Password").val()=='' || $j("#Username").val()=='')) && ($j("#TrustedId").val()=='')))
+                    missingFields1 = 'Connection URLs, as well as Username/Password or Trusted ID are required';
+                
+                if ($j("#companyName").val() == '')
+                    missingFields2 = 'Default Taxpayer Code is required'; 
+                
+                if (missingFields1 != '')
+                    showMessage('areaLookupMessage', missingFields1, 'error');
+                
+                if (missingFields2 != '')
+                    showMessage('configurationMessageDiv', missingFields2, 'error');
+                
+                if (missingFields1 == '' && missingFields2 == '' && haveCreds == true){
+                    //Save config, perform address validation check, save advanced config
+                    saveConfig();
+                }
+            }
+
+            function editAddress(addyName){
+                disableAutocomplete();
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.EditAddress}',
+                    addyName,
+                    function(result, event){
+                        if (event.status) {
+                            currentAddress = result;
+                            processEdit();
+                        } else if (event.type === 'exception') {
+                            alert('I\'m sorry but an error has occurred');
+                        } else {
+                            alert('A critical failure has happened');
+                            document.getElementById("responseErrors").innerHTML = event.message;
+                        }
+                    },
+                    {escape: true}
+                );
+            }
+
+            function processNewAddress(){
+                $j("#addressValidationHeader").text('New Address');
+                modal_addressAdd();
+                //Clear previous input values
+                $j("#newAddrName").val('');
+                $j("#newAddress1").val('');
+                $j("#newAddress2").val('');
+                $j("#newCity").val('');
+                $j("#newState").val('');
+                $j("#newPostalCode").val('');
+                $j("#newCountry").val('');
+                $j("#newTaxAreaID").val('');
+                $j("#newLocationCode").val('');
+                openModal();
+            }
+
+            function processEdit(){
+                $j("#Address1").val(currentAddress.{!NamespacePrefix}Address1__c);
+                $j("#Address2").val(currentAddress.{!NamespacePrefix}Address2__c);
+                $j("#city").val(currentAddress.{!NamespacePrefix}City__c);
+                $j("#state").val(currentAddress.{!NamespacePrefix}State__c);
+                $j("#postalCode").val(currentAddress.{!NamespacePrefix}PostalCode__c);
+                $j("#country").val(currentAddress.{!NamespacePrefix}Country__c);
+                $j("#taxAreaID").val(currentAddress.{!NamespacePrefix}TaxAreaID__c);
+                $j("#LocationCode").val(currentAddress.{!NamespacePrefix}LocationCode__c);
+                $j("#editPaneSecondRow").addClass('slds-form-element__row');
+                $j('#taxCollectionField').show();
+                $j('#customerCodeField').hide();
+                $j('#customerClassField').hide();
+                $j('#locationCodeField').show();
+                $j("#addressValidationHeader").text('Edit Address');
+
+                modal_addressEdit();
+
+                openModal();
+            }
+
+            function processDeleteAddress(addressId){
+                addressIdToDelete = addressId;
+                $j("#addressValidationHeader").text('Delete Address');
+                modal_addressDelete();
+                openModal();
+            }
+
+            function setAddressValidationField(boolValue){
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.SetAddressValidationField}',
+                    boolValue,
+                    function(result, event){
+                        canValidateAddresses = boolValue;
+                    },
+                    {escape: true}
+                );
+            }
+
+            function processEditMap(addyName){
+                $j("#Address1").val(currentAddress.{!NameSpacePrefix}Address1__c);
+                $j("#Address2").val(currentAddress.{!NameSpacePrefix}Address2__c);
+                $j("#city").val(currentAddress.{!NameSpacePrefix}City__c);
+                $j("#state").val(currentAddress.{!NameSpacePrefix}State__c);
+                $j("#postalCode").val(currentAddress.{!NameSpacePrefix}PostalCode__c);
+                $j("#country").val(currentAddress.{!NameSpacePrefix}Country__c);
+                $j("#taxAreaID").val(currentAddress.{!NameSpacePrefix}TaxAreaID__c);
+                $j("#CompanyCode").val(currentAddress.{!NameSpacePrefix}CustomerCode__c);
+                $j("#CompanyClassCode").val(currentAddress.{!NameSpacePrefix}CustomerClassCode__c);
+                $j("#LocationCode").val(currentAddress.{!NameSpacePrefix}LocationCode__c);
+                $j("#addressValidationHeader").text('Edit Address Map');
+                modal_addressEdit();
+                makeAutocompleteAddr(addyName);
+                $j("#editPaneSecondRow").removeClass('slds-form-element__row');
+                $j('#taxCollectionField').hide();
+                $j('#customerCodeField').show();
+                $j('#customerClassField').show();
+                $j('#locationCodeField').hide();
+
+                openModal();
+            }
+
+
+            function assignAndSaveAddress(){
+                currentAddress.{!NameSpacePrefix}Address1__c = $j("#Address1").val();
+                currentAddress.{!NameSpacePrefix}Address2__c = $j("#Address2").val();
+                currentAddress.{!NameSpacePrefix}City__c = $j("#city").val();
+                currentAddress.{!NameSpacePrefix}State__c = $j("#state").val();
+                currentAddress.{!NameSpacePrefix}PostalCode__c = $j("#postalCode").val();
+                currentAddress.{!NameSpacePrefix}Country__c = $j("#country").val();
+                currentAddress.{!NameSpacePrefix}TaxAreaID__c = $j("#taxAreaID").val();
+                currentAddress.{!NameSpacePrefix}CustomerCode__c = $j("#CompanyCode").val();
+                currentAddress.{!NameSpacePrefix}CustomerClassCode__c = $j("#CompanyClassCode").val();
+                currentAddress.{!NameSpacePrefix}LocationCode__c = $j("#LocationCode").val();
+                saveAddress('update');
+            }
+
+            function assignAndAddNewAddress(){
+                newAddress.Name = $j("#newAddrName").val();
+                newAddress.{!NameSpacePrefix}Address1__c = $j("#newAddress1").val();
+                newAddress.{!NameSpacePrefix}Address2__c = $j("#newAddress2").val();
+                newAddress.{!NameSpacePrefix}City__c = $j("#newCity").val();
+                newAddress.{!NameSpacePrefix}State__c = $j("#newState").val();
+                newAddress.{!NameSpacePrefix}PostalCode__c = $j("#newPostalCode").val();
+                newAddress.{!NameSpacePrefix}Country__c = $j("#newCountry").val();
+                newAddress.{!NameSpacePrefix}TaxAreaID__c = $j("#newTaxAreaID").val();
+                newAddress.{!NameSpacePrefix}LocationCode__c = $j("#newLocationCode").val();
+                saveAddress('insert');
+            }
+
+            function validateAddress(addyName){
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.AddressIsComplete}',
+                    addyName,
+                    function(result, event){
+                        if (event.status) {
+                            if (result)
+                                validateAddressHelper(addyName);
+                            else
+                                alert('Please fill in all the required fields');
+                        } else if (event.type === 'exception') {
+                            alert('I\'m sorry but an error has occurred');
+                        } else {
+                            alert('A critical failure has happened');
+                            document.getElementById("responseErrors").innerHTML = event.message;
+                        }
+                    },
+                    {escape: true}
+                );
+            }
+
+            // helper to break up the code
+            function validateAddressHelper(addyName) {
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.VerifyAddress}',
+                    addyName,
+                    function(result, event){
+                        if (event.status && result != null) {
+                            currentAddress = result[0];
+                            pendingAddress = result[1];
+                            processAddressCompare(result);
+                        } else if (event.type === 'exception' || result == null) {
+                            alert('I\'m sorry but an error has occurred');
+                        } else {
+                            alert('A critical failure has happened');
+                            document.getElementById("responseErrors").innerHTML = event.message;
+                        }
+                    },
+                    {escape: true}
+                );
+            }
+
+            //  This fills in the modal fields.
+            function processAddressCompare(result){
+                clearAddressCompare();
+                $j("#origAddress1").text(result[0].{!NamespacePrefix}Address1__c);
+                $j("#origAddress2").text(result[0].{!NamespacePrefix}Address2__c);
+                $j("#origCity").text(result[0].{!NamespacePrefix}City__c);
+                $j("#origState").text(result[0].{!NamespacePrefix}State__c);
+                $j("#origPostalCode").text(result[0].{!NamespacePrefix}PostalCode__c);
+                $j("#origCountry").text(result[0].{!NamespacePrefix}Country__c);
+                $j("#origTaxAreaID").text(result[0].{!NamespacePrefix}TaxAreaID__c);
+                $j("#origLocationCode").text(result[0].{!NamespacePrefix}LocationCode__c);
+                
+                var usaSet = new Set(['US', 'USA', 'UNITED STATES', 'UNITED STATES OF AMERICA']);
+                if (!usaSet.has($j("#origCountry").text().toUpperCase())){
+                    modal_addressCompare_nonUSA();  //Addresses outside of the US cannot be validated
+                } else {
+                    if(canValidateAddresses != true){
+                        modal_addressTaxAreaID_Only();
+                    }
+                    else if (result[1].{!NamespacePrefix}TaxAreaID__c == '' || result[1].{!NamespacePrefix}TaxAreaID__c == null){
+                        modal_addressCompare_matching();
+                    }
+                    else if (result[1].{!NamespacePrefix}TaxAreaID__c == 'ERROR'){
+                        modal_addressCompare_ERROR();
+                        $j("#errorMsgDisplay").text('ERROR: ' + result[1].{!NamespacePrefix}Address1__c);
+                    }
+                    else {
+                        modal_addressCompare_nonmatching();
+                        $j("#correctedAddress1").text(result[1].{!NamespacePrefix}Address1__c);
+                        $j("#correctedAddress2").text(result[1].{!NamespacePrefix}Address2__c);
+                        $j("#correctedCity").text(result[1].{!NamespacePrefix}City__c);
+                        $j("#correctedState").text(result[1].{!NamespacePrefix}State__c);
+                        $j("#correctedPostalCode").text(result[1].{!NamespacePrefix}PostalCode__c);
+                        $j("#correctedCountry").text(result[1].{!NamespacePrefix}Country__c);
+                        $j("#correctedTaxAreaID").text(result[1].{!NamespacePrefix}TaxAreaID__c);
+                        $j("#correctedLocationCode").text(result[1].{!NamespacePrefix}LocationCode__c);
+                    }
+                }
+                $j("#addressValidationHeader").text('Validate Address');
+                openModal();
+            }
+
+            function clearAddressCompare(){
+                $j("#origAddress1").text('');
+                $j("#origAddress2").text('');
+                $j("#origCity").text('');
+                $j("#origState").text('');
+                $j("#origPostalCode").text('');
+                $j("#origCountry").text('');
+                $j("#origTaxAreaID").text('');
+                $j("#origLocationCode").text('');
+                $j("#correctedAddress1").text('');
+                $j("#correctedAddress2").text('');
+                $j("#correctedCity").text('');
+                $j("#correctedState").text('');
+                $j("#correctedPostalCode").text('');
+                $j("#correctedCountry").text('');
+                $j("#correctedTaxAreaID").text('');
+                $j("#correctedLocationCode").text('');
+            }
+
+            function showHideSpinner(isShow) {
+                if(isShow) {
+                    $j(".slds-spinner_container").show('fast');    
+                }
+                else {
+                    $j(".slds-spinner_container").hide('slow');       
+                }
+            }
+
+            function showMessage(divMessageId, message, status) {
+                document.getElementById(divMessageId).getElementsByTagName('h2')[0].innerHTML = message;
+                
+                var idWithPound = '#' + divMessageId;
+                if (status == 'success') {
+                    $j(idWithPound).removeClass('slds-theme--error');
+                    $j(idWithPound).addClass('slds-theme--success');
+                } else if (status == 'error') {
+                    $j(idWithPound).removeClass('slds-theme--success');
+                    $j(idWithPound).addClass('slds-theme--error');
+                }
+
+                $j(idWithPound).show();
+            }
+            
+            function hideMessage(divMessageId) {
+                $j('#'+divMessageId).hide();                
+            }
+            
+            //Housekeeping to do on tab switch
+            function tidyTabs(){
+                hideMessage('areaLookupMessage');
+                hideMessage('taxCalcMessage');
+                hideMessage('configurationMessageDiv');
+            }
+
+            function selectTab(id, elmnt) {
+                var style;
+                if (id == 'main'){
+                    style='scoped';
+                    tidyTabs();
+                }
+                if (id == 'sub')
+                    style='default';
+                
+                //  Re-evaluate validation buttons based on allowances in Vertex
+                showValButtons();
+                
+                var href = $j(elmnt).attr('href');
+                if(href.includes("#logs")) {
+                    showHideSpinner(true);
+                    buildLogTable();
+                }
+                
+                // slds-active
+                $j(elmnt).parent("li").siblings(".slds-active").removeClass("slds-active");
+                $j(elmnt).parent("li[title!='newItemMappingTab']").addClass("slds-active");
+                
+                // tabindex
+                $j(elmnt).parent("li").siblings().children("a").attr("tabindex", -1);
+                $j(elmnt).attr("tabindex", 0);
+                
+                // aria-selected
+                $j(elmnt).parent("li").siblings().children("a").attr("aria-selected", false);
+                $j(elmnt).attr("aria-selected", true);
+                
+                // hiding previouly selected tab (slds-show/slds-hide)
+                $j(elmnt).closest(".slds-tabs--"+style).children("div[role='tabpanel'].slds-show").addClass("slds-hide");
+                $j(elmnt).closest(".slds-tabs--"+style).children("div[role='tabpanel'].slds-show").removeClass("slds-show");
+                
+                // displaying newly selected tab (slds-show/slds-hide)
+                $j(elmnt).closest(".slds-tabs--"+style).children("div[aria-labelledby='"+elmnt.id+"']").addClass("slds-show");
+                $j(elmnt).closest(".slds-tabs--"+style).children("div[aria-labelledby='"+elmnt.id+"']").removeClass("slds-hide");
+            }
+
+            function correctAddress(){
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.UpdateAddress}',
+                    currentAddress,
+                    pendingAddress,
+                    function(result, event){
+                        if (event.status) {
+                            rerenderAddresses();
+                            closeModal();
+                        } else if (event.type === 'exception') {
+                            alert('I\'m sorry but an error has occurred');
+                        } else {
+                            alert('A critical failure has happened');
+                            document.getElementById("responseErrors").innerHTML = event.message;
+                        }
+                    },
+                    {escape: true}
+                );
+            }
+
+            function saveAddress(operation){
+                var addr;
+                if (operation == 'update')
+                    addr = currentAddress;
+                else if (operation == 'insert')
+                    addr = newAddress;
+
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.SaveAddress}',
+                    addr,
+                    function(result, event){
+                        if (event.status) {
+                            rerenderAddresses();
+                            closeModal();
+                            newAddress = {};
+                        } else if (event.type === 'exception') {
+                            alert('I\'m sorry but an error has occurred');
+                        } else {
+                            alert('A critical failure has happened');
+                            document.getElementById("responseErrors").innerHTML = event.message;
+                        }
+                    },
+                    {escape: true}
+                );
+            }
+
+            function deleteAddress(){
+                if (addressIdToDelete != null){
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.VertexSettingsController.DeleteAddress}',
+                        addressIdToDelete,
+                        function(result, event){
+                            if (event.status) {
+                                rerenderAddresses();
+                                closeModal();
+                                addressIdToDelete = null;
+                            } else if (event.type === 'exception') {
+                                alert('I\'m sorry but an error has occurred');
+                            } else {
+                                alert('A critical failure has happened');
+                                document.getElementById("responseErrors").innerHTML = event.message;
+                            }
+                        },
+                        {escape: true}
+                    );
+                }
+            }
+
+            function saveConfig(){
+                var configPattern = 
+                {
+                    'TaxAreaLookupURL__c':$j("#taxAreaURL").val(),
+                    'TaxCalculationURL__c': $j("#taxCalcURL").val(),
+                    'Username__c':$j("#Username").val(),
+                    'Password__c':$j("#Password").val(),
+                    'TrustedId__c':$j("#TrustedId").val()
+                };
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.SaveConfig}',
+                    configPattern,
+                    function(result, event){
+                        if (event.status) {
+                            rerenderAddresses();
+                            closeModal();
+                        } else if (event.type === 'exception') {
+                            alert('I\'m sorry but an error has occurred');
+                        } else {
+                            alert('A critical failure has happened');
+                            document.getElementById("responseErrors").innerHTML = event.message;
+                        }
+
+                        //Continue chaining actions
+                        Visualforce.remoting.Manager.invokeAction(
+                            '{!$RemoteAction.VertexSettingsController.ValidateAddressAndTaxURLs}',
+                            function (result, event) {
+                                if (event.status) {
+                                    currentAddress = result;
+                                    var areaLookupPassed;
+                                    var taxCalcPassed;
+                                    canConnect = false;
+
+                                    if (result[0] == 'Successful Connection'){
+                                        areaLookupPassed = true;
+                                        showMessage('areaLookupMessage', 'Tax Area Lookup URL: Connection Verified', 'success');
+                                    } else {
+                                        showMessage('areaLookupMessage', 'Tax Area Lookup URL: Connection Not Valid', 'error');
+                                    }
+                                    if (result[1] == 'Successful Connection'){
+                                        taxCalcPassed = true;
+                                        showMessage('taxCalcMessage', 'Tax Calculation URL: Connection Verified', 'success');
+                                    } else {
+                                        showMessage('taxCalcMessage', 'Tax Calculation URL: Connection Not Valid', 'error');
+                                    }
+                                    if (areaLookupPassed == true && taxCalcPassed == true)
+                                        canConnect = true;
+                                    
+                                    showValButtons();
+                                    
+                                    //Perform another remote action
+                                    saveAdvancedConfig();
+                                } else if (event.type === 'exception') {
+                                    alert('I\'m sorry but an error has occurred');
+                                } else {
+                                    alert('A critical failure has happened');
+                                    document.getElementById("responseErrors").innerHTML = event.message;
+                                }
+                            },
+                            { escape: true }
+                        );
+                    },
+                    {escape: true}
+                );
+            }
+
+            function saveAdvancedConfig(){
+                var configPattern = {
+                    'LoggingLevel__c':$j("#severity").val(),
+                    'AllowProcessBuilderRequests__c':$j("#allowPBR").is(':checked'),
+                    'AsynchronousLogging__c':$j("#asynchronousLogging").is(':checked'),
+                    'MaximumLoggingRows__c':$j("#maxlogrows").val(),
+                    'MaximumLineItems__c':$j("#maxlineitems").val(),
+                    'CompanyName__c':$j("#companyName").val(),
+                    'CompanyTaxId__c':$j("#companyTaxId").val()
+                }
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.SaveAdvancedConfig}',
+                    configPattern,
+                    function(result, event){
+                        if (event.status) {
+                            showMessage('configurationMessageDiv', 'Configurations saved successfully.', 'success');
+                            rerenderAddresses();
+                            closeModal();
+                        } else if (event.type === 'exception') {
+                            alert('I\'m sorry but an error has occurred');
+                        } else {
+                            alert('A critical failure has happened');
+                            document.getElementById("responseErrors").innerHTML = event.message;
+                        }
+                    },
+                    {escape: true}
+                );
+            }
+            
+            var outputDiv = document.getElementById("table-container-custom");
+            
+            function queryLogRecord(logId) {
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.queryVertexLog}', logId,
+                    function(result,event) {
+                        if(event.status) {
+                            // console.log(JSON.stringify(result));
+                            $j("#logNameModal").text(result.name);
+                            $j("#runBatchModalHeader").text(result.name);
+                            $j("#endpointModal").text(result.endpoint);
+                            $j("#responseStatusModal").text(result.responseStatus);
+                            $j("#responseStatusCodeModal").text(result.responseStatusCode);
+                            $j("#responseTimestamp").text(result.createdDate);
+                            $j("#detailsModal").html(result.details.replace(/\|/g, '.<br/>'));
+
+                            // width needs to be reset to the width before the paragraph is populated
+                            var wdth = $j('#modalRequestDiv').width();
+                            $j("#requestModal").html(result.request);
+                            $j("#responseModal").html(result.response);
+                            $j("#requestModal").css("width",  wdth);
+                            $j("#responseModal").css("width", wdth);
+                            // 
+                            $j("#modalLoading").addClass('slds-hide');
+                        }
+                        else {
+                            alert(event.message);
+                        }
+                    },{escape: true}
+                );
+            }
+
+            function buildLogTable() {
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexSettingsController.buildLogTable}',
+                    function(result,event) {
+                        if(event.status) {
+                            // console.log(JSON.stringify(result));
+
+                            var csvIcon = '<span class="slds-icon_container"><svg class="slds-icon slds-icon--large" aria-hidden="true">';
+                            csvIcon += '<use xmlns:xlink="http://www.w3.org/1999/xlink"';
+                            csvIcon += ' xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/doctype-sprite/svg/symbols.svg#csv')}"></use></svg></span>';
+
+
+                            var sldsDataTable = '<div class="slds-scrollable--x"><table class="slds-table slds-table--bordered slds-table--cell-buffer"><thead><tr class="slds-text-title--caps">';
+
+                            sldsDataTable += '<th scope="col"><div class="slds-truncate" title="Log Name">Log Name</div></th>';
+                            sldsDataTable += '<th scope="col"><div class="slds-truncate" title="Timestamp">Timestamp</div></th>';
+                            sldsDataTable += '<th scope="col"><div class="slds-truncate" title="Details">Details</div></th>';
+                            sldsDataTable += '<th scope="col"><div class="slds-truncate" title="Endpoint">Endpoint</div></th>';
+                            sldsDataTable += '<th scope="col"><div class="slds-truncate" title="Transaction ID">Transaction ID</div></th>'; 
+                            sldsDataTable += '</tr></thead><tbody>';
+
+                            // for loop query
+                            for(var i=0; i<result.length; i++) {
+
+                                var endPt = (result[i].endpoint == undefined) ? '' : result[i].endpoint;
+
+                                sldsDataTable += '<tr><th scope="row" data-label="Log Name">';
+                                sldsDataTable += '<div class="slds-truncate" title="' + result[i].name + '"><a onclick="openModalLog(\'' + result[i].logId + '\');" href="javascript:void(0);">' + result[i].name + '</a></div>';
+                                sldsDataTable += '</th>';
+
+                                sldsDataTable += '<td data-label="Timestamp"><div class="slds-truncate" title="' + result[i].createdDate + '">' + result[i].createdDate + '</div></td>';
+                                sldsDataTable += '<td data-label="Log Name"><div class="slds-truncate" title="' + result[i].details + '">' + result[i].details + '</div></td>';
+                                sldsDataTable += '<td data-label="Details"><div class="slds-truncate" title="' + endPt + '">' + endPt + '</div></td>';
+                                if (result[i].transactionId != 'testTransaction'){
+                                    sldsDataTable += '<td data-label="Transaction ID"><div class="slds-truncate" title="' + result[i].transactionId + '"><a href="/' + 
+                                                    result[i].transactionId + '" target = "_blank">' + result[i].transactionId + '</a></div></td>';
+                                } else {
+                                    sldsDataTable += '<td data-label="Transaction ID"><div></div></td>';
+                                }
+                                sldsDataTable += '</tr>'
+                            }
+
+                            sldsDataTable = sldsDataTable + '</tbody></table></div>';
+
+                            if(result.length == 0) {
+                                sldsDataTable = sldsDataTable + '<div style="padding:2%;" class="slds-form-element"><label for="objectMappings" onclick="showHideDivs();">';
+                                sldsDataTable = sldsDataTable + '<span style="font-size:105%;" class="slds-form-element__label">No items to display.</span></label></div>';
+                            }
+
+                            showHideSpinner(false);
+                            outputDiv.innerHTML = sldsDataTable;
+                        }
+                        else {
+                            alert(event.message);
+                        }
+                    },{escape: true}
+                );
+            }
+        </script>
+
+        <style>
+            .ui-state-focus {
+                outline: 0;
+                background-color: #f4f6f9;
+                color: #16325c;
+                text-decoration: none;
+            }
+            .ui-helper-hidden-accessible { display:none !important; }
+        </style>
+
+        <script>
+            (function( $ ) {
+                $.widget( 'slds.autocomplete', $.ui.autocomplete, {
+                    _create: function() {
+                        this._super();
+                        this.sldsMenu = $('<div>')
+                                            .addClass('slds-lookup__menu slds-hide')
+                                            .attr('role', 'listbox')
+                        this.element.parentsUntil('.slds-lookup').append( this.sldsMenu );
+                        $('.ui-helper-hidden, .ui-helper-hidden-accessible').addClass('slds-hide');
+                    },
+                    _renderMenu: function( ul, items ) {
+                        var self = this;
+                        ul.addClass('slds-lookup__list').attr('role', 'presentation');
+                        ul.appendTo( this.sldsMenu );
+                        this.sldsMenu.addClass('slds-show').removeClass('slds-hide');
+                        $.each( items, function( index, item ) {
+                            self._renderItemData( ul, item );
+                        });
+                    },
+
+                    _renderItem: function( ul, item ) {
+                        return $('<li>')
+                            .css('background-color', 'white')
+                            .addClass('slds-lookup__item')
+                            .append( '<a href="#" role="option">' + item.label + '</a>' )
+                            .appendTo( ul );
+                    },
+                    _close: function( event ) {
+                        this._super( event );
+                        this.sldsMenu.addClass('slds-hide').removeClass('slds-show');
+                    }
+                });
+            })( jQuery );
+
+            function makeAutocompleteAddr(addyName) {
+                $j("#acWrapper .slds-input").autocomplete({
+                    source: function(request, response) {
+                        Visualforce.remoting.Manager.invokeAction(
+                            '{!$RemoteAction.VertexSettingsController.getMappingOptions}', addyName, request.term,
+                            function(result,event) {
+                                if(event.status) {
+                                    response(result);
+                                }
+                                else {
+                                    alert(event.message);
+                                }
+                            },{escape: true}
+                        )
+                    }        
+                });
+            }
+
+            function makeAutocompleteMap(elem) {
+                //var elem = $j("#selectObjectsDiv .slds-input");
+                if (elem.value != null && elem.value.length >= 3){
+                    $j(elem).autocomplete({
+                        source: function(request, response) {
+                            Visualforce.remoting.Manager.invokeAction(
+                                '{!$RemoteAction.VertexSettingsController.getFilteredObjects}', request.term,
+                                function(result,event) {
+                                    if(event.status)
+                                        response(result);
+                                },{escape: true}
+                            )
+                        }
+                    });
+                } else {
+                    $j(elem).autocomplete({
+                        source: null
+                    });
+                    $j(elem).autocomplete("close");
+                }
+            }
+            function disableAutocomplete() {
+                $j("#acWrapper .slds-input").attr('autocomplete', 'off');
+            }
+        </script>
+
+        <!-- Prepopulate the Item Mappings tab -->
+        <apex:outputPanel id="fieldMappingPresets">
+            <apex:repeat value="{!ItemMappings}" var="rec">
+                <script>
+                    try {
+                        $j('#mappingName-{!rec.ID}').val('{!JSENCODE(rec.Name)}');
+
+                        $j('#parentObjName-{!rec.ID}').val('{!JSENCODE(rec.ParentSObject__c)}');
+                        
+                        //This function will chain several controller methods and preset saved values
+                        RequeryLineObjOpts('{!JSENCODE(rec.ParentSObject__c)}', '{!rec.ID}', '{!JSENCODE(rec.ChildSObject__c)}', '{!JSENCODE(rec.ParentLookup__c)}');   //Populate options
+                        
+                        UpdateTransactionFieldOpts('{!JSENCODE(rec.ParentSObject__c)}', '{!rec.ID}');
+                        
+                        //Populate the source field options in the first row of the Additional Mappings table
+                        UpdateAdditionalTransMappingOpts('{!JSENCODE(rec.ParentSObject__c)}', '{!rec.ID}', $j('#transLabelPicklist-{!rec.ID}-').val());
+                        UpdateAdditionalLineMappingOpts('{!JSENCODE(rec.ChildSObject__c)}', '{!rec.ID}', $j('#lineLabelPicklist-{!rec.ID}-').val());
+
+                        var xmlMessage = '{!JSENCODE(rec.XMLMessage__c)}';
+                        if (xmlMessage == null || xmlMessage == '')
+                            xmlMessage = 'Quote';  //Default
+                        $j('#xmlMessage-{!rec.ID}').val(xmlMessage);
+                        
+                        var transactionType = '{!JSENCODE(rec.TransactionType__c)}';
+                        if (transactionType == null || transactionType == '')
+                            transactionType = 'SALE';  //Default
+                        $j('#transactionType-{!rec.ID}').val(transactionType);
+
+                    } catch (err) {
+                        console.log('Error ItemMappings traversal: ' + err);
+                    }
+                </script>
+            </apex:repeat>
+            <script>
+                $j('a#tab-default-' + clonedSettingID + '__item').click();
+                showHideSpinner(false);
+            </script>
+        </apex:outputPanel>
+    
+        </apex:form>
+        </body>
+    </html>
+
+</apex:page>

@@ -1,0 +1,95 @@
+<template>
+    <lightning-card>
+        <lightning-layout slot="title">
+                <img src={vertexLogoUrl}>
+                <div style="padding-top:3px; padding-left:10px; padding-right:3px;">Vertex Address Validation</div>
+        </lightning-layout>
+        <lightning-layout if:true={isLoading}>
+            <lightning-spinner></lightning-spinner>
+        </lightning-layout>
+        <lightning-layout if:false={isLoading}>
+            <div class="cardBody">
+                <lightning-layout style="padding-left:45px;" if:true={isEnabled}>
+                    <lightning-layout-item class="validationColumns" flexibility="auto">
+                        <lightning-icon icon-name="action:approval" size="small" if:true={billingPassIcon}></lightning-icon>
+                        <lightning-icon icon-name="action:close" size="small" if:false={billingPassIcon}></lightning-icon>
+                        <br>
+                        {billingText}
+                        <div if:true={showBillingBtns}>
+                            <br>
+                            <lightning-button variant="Success" label="Accept Current Address" data-addresstype="billing" title="Accept Current Address" onclick={approveAddress} class="slds-m-left_x-small"></lightning-button><br><br>
+                            <lightning-button variant="brand" label="Update from Vertex" title="Update from Vertex" data-addresstype="billing" onclick={lookupAddress} class="slds-m-left_x-small"></lightning-button>
+                        </div>
+                    </lightning-layout-item>
+                    <lightning-layout-item class="validationColumns" flexibility="auto">
+                        <lightning-icon icon-name="action:approval" size="small" if:true={shippingPassIcon}></lightning-icon>
+                        <lightning-icon icon-name="action:close" size="small" if:false={shippingPassIcon}></lightning-icon>
+                        <br>
+                        {shippingText}
+                        <div if:true={showShippingBtns}>
+                            <br>
+                            <lightning-button variant="Success" label="Accept Current Address" title="Accept Current Address" data-addresstype="shipping" onclick={approveAddress} class="slds-m-left_x-small"></lightning-button><br><br>
+                            <lightning-button variant="brand" label="Update from Vertex" title="Update from Vertex" data-addresstype="shipping" onclick={lookupAddress} class="slds-m-left_x-small"></lightning-button>
+                        </div>
+                    </lightning-layout-item>
+                </lightning-layout>
+                <lightning-layout style="padding-left:45px;" if:false={isEnabled}>
+                        Address Validation is not enabled for this org.
+                </lightning-layout>
+            </div>
+        </lightning-layout>
+        <!-- callout failed handling -->
+    </lightning-card>
+
+    <template if:true={openmodel}>
+        <div class="addressUpdate">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Vertex Address Validation</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <lightning-layout if:false={checkError}>
+                            <lightning-layout-item flexibility="auto">
+                                <h2><b>Current Address</b></h2>
+                                {addressToTest.Address1__c}
+                                <br>
+                                {addressToTest.Address2__c}
+                                <br>
+                                {addressToTest.City__c}, {addressToTest.State__c} {addressToTest.PostalCode__c}
+                            </lightning-layout-item>
+                            <lightning-layout-item flexibility="auto">
+                                <h2><b>Proposed Address</b></h2>
+                                {addressResponse.Vertex__Address1__c}
+                                <br>
+                                {addressResponse.Vertex__Address2__c}
+                                <br>
+                                {addressResponse.Vertex__City__c}, {addressResponse.Vertex__State__c} {addressResponse.Vertex__PostalCode__c}
+                            </lightning-layout-item>
+                        </lightning-layout>
+                        <lightning-layout if:true={checkError}>
+                            <lightning-layout-item flexibility="auto">
+                                <h2><b>Current Address</b></h2>
+                                {addressToTest.Address1__c}
+                                <br>
+                                {addressToTest.Address2__c}
+                                <br>
+                                {addressToTest.City__c}, {addressToTest.State__c} {addressToTest.PostalCode__c}
+                            </lightning-layout-item>
+                            <lightning-layout-item flexibility="auto">
+                                    <h2><b>NOTICE</b></h2>
+                                    <br >
+                                    {errorMsg}
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Cancel" variant="neutral" onclick={closeModal}></lightning-button>&nbsp;&nbsp;&nbsp;&nbsp;
+                        <lightning-button label="Update Address" variant="brand" onclick={correctAddress} if:false={checkError}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+    </template>
+</template>

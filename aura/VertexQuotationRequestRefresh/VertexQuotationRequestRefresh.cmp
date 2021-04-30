@@ -1,0 +1,18 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="VertexQuotationRequest">
+    
+        <div class="slds-notify slds-notify--toast" role="alert">
+            <span class="slds-assistive-text">Warning</span>
+            
+            <div class="slds-notify__content">
+                <h2 class="slds-text-heading--small">Are you sure?  This will recalculate tax on all Line Items.</h2>
+            </div>
+            <div class="slds-show" aura:id="refreshButton" align="center" style="padding-top:15px;">
+                <ui:button label="Cancel" press="{!c.Cancel}" />
+                <ui:button label="Refresh" press="{!c.Refresh}" />
+            </div>
+            <div class="slds-hide" aura:id="refreshSpinner" style="padding-top:15px;">
+                <lightning:spinner aura:id="mySpinner" variant="brand" size="large" />
+            </div>
+        </div>
+
+</aura:component>

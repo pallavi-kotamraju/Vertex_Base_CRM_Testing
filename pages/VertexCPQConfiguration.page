@@ -1,0 +1,462 @@
+<apex:page showHeader="true" standardStylesheets="true" controller="VertexCPQConfigurationController" sidebar="false" applyHtmlTag="true" applyBodyTag="false" docType="html-5.0">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <head>
+            <title>Vertex for CloudCraze Settings</title>
+            <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+            <apex:slds />
+            <apex:includeScript value="{!URLFOR($Resource.CSI_js, '/jquery.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.CSI_js, '/jquery-ui.min.js')}" />
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+        </head>
+        <body>
+            <apex:form >
+                <apex:actionFunction name="rerenderFieldMappings" rerender="fieldMappingPresets, fieldMappingsSection" />
+                <apex:actionFunction name="rerenderAddressMaps" rerender="addressMapList" />
+                <apex:actionFunction name="refreshValidityTab" action="{!RefreshValidityChecks}" rerender="validityCheckSection" />
+            
+                <div class="slds-scope"> 
+                    <!-- PAGE HEADER -->
+                    <div class="slds-page-header" role="banner">
+                        <div class="slds-grid">
+                            <div class="slds-col">
+                                <!-- HEADING AREA -->
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                        <!-- <img class="slds-icon slds-icon--large slds-icon-standard-user" src="{!URLFOR($Resource.VertLogo)}" style="padding:5px" /> -->
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <p class="slds-text-heading--label">Vertex Tax Link for Salesforce</p>
+                                        <h1 class="slds-text-heading--medium">Vertex CPQ Configuration</h1>
+                                    </div>
+                                </div>
+                                <!-- HEADING AREA -->
+                            </div>
+                        </div>
+                        <div class="slds-grid slds-page-header__detail-row">
+                            <div class="slds-col--padded slds-size--1-of-4">
+                                <dl>
+                                    <dt>
+                                        <p class="slds-text-heading--label slds-truncate">Where taxation meets innovation</p>
+                                    </dt>
+                                    <dd>
+                                        <p class="slds-text-body--regular slds-truncate">
+                                            Please complete the following configuration to enable automatic tax calculations on Carts
+                                        </p>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- / PAGE HEADER -->
+                    <!-- Tab Panel -->
+                    <div class="slds-tabs--scoped">
+                        <!-- TABS -->
+                        <ul class="slds-tabs--scoped__nav" role="tablist">
+
+                            <li class="slds-tabs--scoped__item slds-text-heading--label slds-active" title="Configuration" 
+                                role="presentation">
+                                    <a class="slds-tabs--scoped__link" href="#void" role="tab" tabindex="0" aria-selected="true" aria-controls="tab-scoped-1" 
+                                        id="tab-scoped-1__item" onclick="selectTab('main',this);">Configuration</a>
+                            </li>
+                            <li class="slds-tabs--scoped__item slds-text-heading--label" title="Validity Check" role="presentation">
+                                <a class="slds-tabs--scoped__link" href="#void" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-2"
+                                    id="tab-scoped-2__item" onclick="refreshValidityTab(); selectTab('main',this);">Validity Check</a>
+                            </li>
+                        </ul>
+                        
+                        <div id="tab-scoped-1" class="slds-tabs--scoped__content slds-show" role="tabpanel" aria-labelledby="tab-scoped-1__item">
+                            <div class="slds-form-element" style="margin-top:20px; margin-left: 50px">
+                                <label class="slds-checkbox" for="asynchronousCallout">
+                                    <input type="checkbox" id="asynchronousCallout" onchange="setAsynchronousCallout(this.checked)" ></input>
+                                    <span class="slds-checkbox--faux"></span>
+                                    <span class="slds-form-element__label">Asynchronous CPQ Callout</span>
+                                </label>
+                            </div>
+                            
+                            <apex:outputPanel id="fieldMappingsSection" styleClass="slds-grid slds-gutters" style="width:70%">
+                                
+                                <div id="transMappingsTable" class="slds-section slds-col" style="margin-right:15px">
+                                    <h3 class="slds-section-title--divider">Transaction</h3>
+                                    <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                        <tr class="slds-text-title_caps">
+                                            <th scope="col">Label</th>
+                                            <th scope="col">Source Salesforce Field</th>
+                                            <th scope="col">Actions</th>
+                                        </tr>
+                                        <apex:repeat value="{!BoundCartMappings}" var="row">
+                                            <tr>
+                                                <td>
+                                                    <select id="cartLabelPicklist-{!row.settingLoc}" class="slds-select" style="display:{!IF(row.label == null, 'inline', 'none')}"
+                                                        onchange="UpdateAdditionalTransMappingOpts(this.value)">
+                                                        <apex:repeat value="{!UnboundCartMappings}" var="opt">
+                                                            <option value="{!opt.value}">{!opt.label}</option>
+                                                        </apex:repeat>
+                                                    </select>
+                            
+                                                    <apex:outputText value="{!row.label}" rendered="{!row.label != null}" />
+                                                </td>
+                                                <td>
+                                                    <!-- New -->
+                                                    <select id="cartSrcPicklist-{!row.settingLoc}" class="slds-select" style="display:{!IF(row.label == null, 'inline', 'none')}">
+                                                        <option value="" disabled="true">Select Salesforce Field...</option>
+                                                        <option value=""></option>
+                                                    </select>
+                            
+                                                    <!-- Existing -->
+                                                    <apex:outputText value="{!row.sourceField}" rendered="{!row.label != null}" />
+                                                </td>
+                                                <td>
+                                                    <!-- New -->
+                                                    <apex:commandButton value="Add" onclick="AddFieldMapping('cart', this); return false;" rendered="{!row.label == null}"
+                                                        styleClass="slds-button slds-button_neutral" style="width:70px" />
+                                                    <!-- Existing -->
+                                                    <apex:commandButton onclick="if(confirm('Delete field mapping?')){DeleteFieldMapping('transaction', '{!row.settingType}', '{!row.settingLoc}', this);} return false;"
+                                                        value="Delete" rendered="{!row.label != null}" styleClass="slds-button slds-button_neutral" style="width:70px"/>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </table>
+                                </div>
+                                <div id="lineMappingsTable" class="slds-section slds-col" style="margin-left:15px">
+                                    <h3 class="slds-section-title--divider">Line Item</h3>
+                                    <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                        <tr class="slds-text-title_caps">
+                                            <th scope="col">Label</th>
+                                            <th scope="col">Source Salesforce Field</th>
+                                            <th scope="col">Actions</th>
+                                        </tr>
+                                        <apex:repeat value="{!BoundCartItemMappings}" var="row">
+                                            <tr>
+                                                <td>
+                                                    <select id="cartItemLabelPicklist-{!row.settingLoc}" class="slds-select" style="display:{!IF(row.label == null, 'inline', 'none')}"
+                                                        onchange="UpdateAdditionalLineMappingOpts(this.value)">
+                                                        <apex:repeat value="{!UnboundCartItemMappings}" var="opt">
+                                                            <option value="{!opt.value}">{!opt.label}</option>
+                                                        </apex:repeat>
+                                                    </select>
+                            
+                                                    <apex:outputText value="{!row.label}" rendered="{!row.label != null}" />
+                                                </td>
+                                                <td>
+                                                    <!-- New -->
+                                                    <select id="cartItemSrcPicklist-{!row.settingLoc}" class="slds-select" style="display:{!IF(row.label == null, 'inline', 'none')}">
+                                                        <option value="" disabled="true">Select Salesforce Field...</option>
+                                                        <option value=""></option>
+                                                    </select>
+                            
+                                                    <!-- Existing -->
+                                                    <apex:outputText value="{!row.sourceField}" rendered="{!row.label != null}" />
+                                                </td>
+                                                <td>
+                                                    <!-- New -->
+                                                    <apex:commandButton value="Add" onclick="AddFieldMapping('cartItem', this); return false;" rendered="{!row.label == null}"
+                                                        styleClass="slds-button slds-button_neutral" style="width:70px" />
+                                                    <!-- Existing -->
+                                                    <apex:commandButton onclick="if(confirm('Delete field mapping?')){DeleteFieldMapping('line', '{!row.settingType}', '{!row.settingLoc}', this);} return false;"
+                                                        value="Delete" rendered="{!row.label != null}" styleClass="slds-button slds-button_neutral" style="width:70px"/>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </table>
+                                </div>
+                            </apex:outputPanel>
+                            <div class="slds-form-element slds-m-top_medium">
+                                <div class="slds-form-element__control">
+                                    <button class="slds-button slds-button--brand" onClick="restoreDefaultObjMaps()">Restore Defaults</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validity Check -->
+                        <div id="tab-scoped-2" class="slds-tabs--scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-2__item">
+                            <div class="slds-panel__section">
+                                <apex:outputPanel id="validityCheckSection">
+                                    <p class="slds-truncate slds-text-body_small">
+                                        Unexpected errors may occur if custom settings have been incorrectly altered, or if you lack required field level permissions.
+                                        Use the information in this tab to determine the source of errors.
+                                    </p>
+                                    <br/>
+                                    <h3 class="slds-section-title--divider">
+                                        Invalid Field Mappings
+                                        <i class="{!IF(fieldValidityResults.size == 0, 'fa fa-check', 'fa fa-exclamation-circle')}" style="margin-left:10px; font-size:32px; color:{!IF(fieldValidityResults.size == 0, 'green', 'red')}"></i>
+                                    </h3>
+                                    <div class="slds-form--stacked slds-p-around--medium slds-m-bottom--x-small">
+                                        <apex:repeat value="{!fieldValidityResults}" var="vResult">
+                                            <div>{!vResult}</div>
+                                        </apex:repeat>
+                                        <span style="display:{!IF(fieldValidityResults.size == 0, 'inline', 'none')}">
+                                            No invalid field mappings found
+                                        </span>
+                                    </div>
+                        
+                                    <h3 class="slds-section-title--divider">
+                                        Data Type Mismatches
+                                        <i class="{!IF(DataTypeResults.size == 0, 'fa fa-check', 'fa fa-exclamation-circle')}" style="margin-left:10px; font-size:32px; color:{!IF(DataTypeResults.size == 0, 'green', 'red')}"></i>
+                                    </h3>
+                                    <div class="slds-form--stacked slds-p-around--medium slds-m-bottom--x-small">
+                                        <apex:repeat value="{!DataTypeResults}" var="dtResult">
+                                            <div>{!dtResult}</div>
+                                        </apex:repeat>
+                                        <span style="display:{!IF(DataTypeResults.size == 0, 'inline', 'none')}">
+                                            No data type mismatches found in field mappings
+                                        </span>
+                                    </div>
+                        
+                                    <h3 class="slds-section-title--divider">
+                                        Insufficient Field Level Permissions
+                                        <i class="{!IF(fieldPermissionResults.size == 0, 'fa fa-check', 'fa fa-exclamation-circle')}" style="margin-left:10px; font-size:32px; color:{!IF(fieldPermissionResults.size == 0, 'green', 'red')}"></i>
+                                    </h3>
+                                    <div class="slds-form--stacked slds-p-around--medium slds-m-bottom--x-small">
+                                        <apex:repeat value="{!fieldPermissionResults}" var="fPerm">
+                                            <div>{!fPerm}</div>
+                                        </apex:repeat>
+                                        <span style="display:{!IF(fieldPermissionResults.size == 0, 'inline', 'none')}">
+                                            No insufficient field permissions found
+                                        </span>
+                                    </div>
+                                </apex:outputPanel>
+                            </div>
+                        </div>
+
+                    <!-- / Tab Panel -->
+                    </div>
+                </div>
+            </apex:form>
+
+        <script>
+            var currentAddressMap;
+            var currentAddressMapName;
+
+            $j = jQuery.noConflict();
+            $j().ready( function() {
+                fetchAsynchronousCallout();
+            });
+
+            function fetchAsynchronousCallout(){
+                $j('#asynchronousCallout').prop('checked', {!config.AsynchronousCPQCallout__c});
+            }
+
+            function setAsynchronousCallout(booleanValue){
+                console.log('inside setAsynchronousCallout');
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexCPQConfigurationController.setAsychronousCallout}',
+                    booleanValue,
+                    function (result, event) {
+                        rerenderFieldMappings();
+                    },
+                    { escape: false }
+                );
+            }
+
+            function AddFieldMapping(objLevel, btnElem) {
+                var selectedOpt = $j('#' + objLevel + 'LabelPicklist-').val();
+                if (selectedOpt != null) {
+                    btnElem.value = 'Adding...';
+                    btnElem.disabled = 'disabled';
+
+                    var mappingType;
+                    if (selectedOpt.includes('obj: '))
+                        mappingType = 'obj';
+                    else if (selectedOpt.includes('fld: '))
+                        mappingType = 'fld';
+                    else if (selectedOpt.includes('dest: '))
+                        mappingType = 'dest';
+                    else if (selectedOpt.includes('orig-admin: '))
+                        mappingType = 'orig-admin';
+                    else if (selectedOpt.includes('orig-phys: '))
+                        mappingType = 'orig-phys';
+
+                    var targetLoc = selectedOpt.substring(selectedOpt.lastIndexOf(': ') + 1).trim();
+                    var valueToWrite = $j('#' + objLevel + 'SrcPicklist-').val();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.VertexCPQConfigurationController.AddFieldMapping}',
+                        objLevel == 'cart' ? 'transaction' : 'line',
+                        mappingType,
+                        targetLoc,
+                        valueToWrite,
+                        function (result, event) {
+                            rerenderFieldMappings();
+                        },
+                        { escape: false }
+                    );
+                }
+            }
+
+            function DeleteFieldMapping(objLevel, mappingType, mappingLoc, btnElem) {
+                btnElem.value = 'Deleting...';
+                btnElem.disabled = 'disabled';
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexCPQConfigurationController.DeleteFieldMapping}',
+                    objLevel == 'transaction' ? 'transaction' : 'line',
+                    mappingType,
+                    mappingLoc,
+                    function (result, event) {
+                        rerenderFieldMappings();
+                    },
+                    { escape: false }
+                );
+            }
+
+            function UpdateAdditionalTransMappingOpts(selectedMapping) {
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexCPQConfigurationController.UpdateFldList}',
+                    'SBQQ__Quote__c',
+                    function (result, event) {
+                        if (event.status && result.length > 0) {
+                            
+                            $sourcePicklist = $j('#cartSrcPicklist-');   //No need for the row label after the dash, because it will always be blank
+                            $sourcePicklist.html('');
+
+                            for (i = 0; i < result.length; i++) {
+                                var op = document.createElement('option');
+                                op.value = result[i].api;
+                                op.text = result[i].name;
+                                
+                                if (selectedMapping) {
+                                    if ((selectedMapping.includes('Vertex__TransactionDate__c') || selectedMapping.includes('Vertex__Posting_Date__c')) && result[i].dataType == 'date'){
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else {
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    }
+                                }
+                            }
+                            
+                        } else if (event.type === 'exception') {
+                            alert('I\'m sorry but an error has occurred');
+                        }
+                    },
+                    { escape: true }
+                );
+            }
+
+            function UpdateAdditionalLineMappingOpts(selectedMapping) {
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexCPQConfigurationController.UpdateFldList}',
+                    'SBQQ__QuoteLine__c',
+                    function (result, event) {
+                        if (event.status && result.length > 0) {
+                            
+                            $sourcePicklist = $j('#cartItemSrcPicklist-');   //No need for the row label after the dash, because it will always be blank
+                            $sourcePicklist.html('');
+
+                            for (i = 0; i < result.length; i++) {
+                                var op = document.createElement('option');
+                                op.value = result[i].api;
+                                op.text = result[i].name;
+                                
+                                if (selectedMapping) {
+                                    if (selectedMapping.includes('Line Number')){
+                                        if (result[i].dataType == 'integer' || result[i].dataType == 'double' || result[i].dataType == 'currency')
+                                            $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else if (selectedMapping.includes('Line Date')){
+                                        if (result[i].dataType == 'date')
+                                            $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    } else {
+                                        $sourcePicklist[0].appendChild(op.cloneNode(true));
+                                    }
+                                }
+                            }
+                            
+                        } else if (event.type === 'exception') {
+                            alert('I\'m sorry but an error has occurred');
+                        }
+                    },
+                    { escape: true }
+                );
+            }
+            
+            function showHideSpinner(isShow) {
+                if (isShow) {
+                    $j(".slds-spinner_container").show('fast');    
+                } else {
+                    $j(".slds-spinner_container").hide('slow');       
+                }
+            }
+
+            function showMessage(divMessageId, message, status) {
+                document.getElementById(divMessageId).getElementsByTagName('h2')[0].innerHTML = message;
+                
+                var idWithPound = '#' + divMessageId;
+                if (status == 'success') {
+                    $j(idWithPound).removeClass('slds-theme--error');
+                    $j(idWithPound).addClass('slds-theme--success');
+                } else if (status == 'error') {
+                    $j(idWithPound).removeClass('slds-theme--success');
+                    $j(idWithPound).addClass('slds-theme--error');
+                }
+
+                $j(idWithPound).show();
+            }
+            
+            function hideMessage(divMessageId) {
+                $j('#'+divMessageId).hide();                
+            }
+
+            function restoreDefaultObjMaps(){
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.VertexCPQConfigurationController.ResetObjMappings}',
+                    function (result, event) {
+                        location.reload();
+                    },
+                    { escape: true }
+                );
+            }
+
+            function selectTab(id, elmnt) {
+                var style;
+                if(id=='main') style='scoped';
+                if(id=='sub') style='default';
+                
+                // slds-active
+                $j(elmnt).parent("li").siblings(".slds-active").removeClass("slds-active");
+                $j(elmnt).parent("li").addClass("slds-active");
+                
+                // tabindex
+                $j(elmnt).parent("li").siblings().children("a").attr("tabindex", -1);
+                $j(elmnt).attr("tabindex", 0);
+                
+                // aria-selected
+                $j(elmnt).parent("li").siblings().children("a").attr("aria-selected", false);
+                $j(elmnt).attr("aria-selected", true);
+                
+                // hiding previouly selected tab (slds-show/slds-hide)
+                $j(elmnt).closest(".slds-tabs--"+style).children("div[role='tabpanel'].slds-show").addClass("slds-hide");
+                $j(elmnt).closest(".slds-tabs--"+style).children("div[role='tabpanel'].slds-show").removeClass("slds-show");
+                
+                // displaying newly selected tab (slds-show/slds-hide)
+                $j(elmnt).closest(".slds-tabs--"+style).children("div[aria-labelledby='"+elmnt.id+"']").addClass("slds-show");
+                $j(elmnt).closest(".slds-tabs--"+style).children("div[aria-labelledby='"+elmnt.id+"']").removeClass("slds-hide");
+
+                //hideMessage('mappingsMessageDiv');
+            }
+            
+            var outputDiv = document.getElementById("table-container-custom");
+            
+        </script>
+
+        <!-- Prepopulate the Field Mappings -->
+        <apex:outputPanel id="fieldMappingPresets">
+            <script>
+                try {
+                    //Populate the source field options in the first row of the field mappings tables
+                    UpdateAdditionalTransMappingOpts($j('#cartLabelPicklist-').val());
+                    UpdateAdditionalLineMappingOpts($j('#cartItemLabelPicklist-').val());
+                } catch (err) {
+                    console.log('Error in presetting field mappings: ' + err);
+                }
+            </script>
+        </apex:outputPanel>
+
+        <style>
+            .ui-state-focus {
+                outline: 0;
+                background-color: #f4f6f9;
+                color: #16325c;
+                text-decoration: none;
+            }
+            .ui-helper-hidden-accessible { display:none !important; }
+        </style>
+
+        </body>
+    </html>
+</apex:page>
