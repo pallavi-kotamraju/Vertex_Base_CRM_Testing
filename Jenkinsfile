@@ -1,5 +1,18 @@
 #!groovy
 import groovy.json.JsonSlurperClassic
+pipeline {
+    agent { node { label 'master' } }
+    tools {
+        jdk "openjdk12"
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh "echo Hello World"
+            }
+        }
+    }
+}
 node {
 
     def BUILD_NUMBER=env.BUILD_NUMBER
@@ -18,19 +31,7 @@ node {
     println CONNECTED_APP_CONSUMER_KEY
     def toolbelt = tool 'toolbelt'
 	
-	pipeline {
-    agent { node { label 'master' } }
-    tools {
-        jdk "openjdk12"
-    }
-    stages {
-        stage('Build') {
-            steps {
-                sh "echo Hello World"
-            }
-        }
-    }
-}
+	
 
     stage('checkout source') {
         // when running in multi-branch job, one must issue this command
