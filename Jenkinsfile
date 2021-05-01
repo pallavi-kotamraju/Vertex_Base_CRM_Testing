@@ -1,18 +1,6 @@
 #!groovy
 import groovy.json.JsonSlurperClassic
-pipeline {
-    agent { node { label 'master' } }
-    tools {
-        jdk "openjdk8"
-    }
-    stages {
-        stage('Build') {
-            steps {
-                sh "echo Hello World"
-            }
-        }
-    }
-}
+
 node {
 
     def BUILD_NUMBER=env.BUILD_NUMBER
