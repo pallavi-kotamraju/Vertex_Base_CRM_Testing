@@ -3,7 +3,7 @@ import groovy.json.JsonSlurperClassic
 pipeline {
     agent { node { label 'master' } }
     tools {
-        jdk "openjdk12"
+        jdk "openjdk8"
     }
     stages {
         stage('Build') {
