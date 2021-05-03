@@ -6,6 +6,7 @@ public class VertexResponseBatchable implements Database.Batchable<VertexCore.Re
     public VertexResponseBatchable( list<VertexCore.ResponseWrapper> calloutResults) {   
    
         System.debug('-->Log 0: VertexResponseBatchable: Constructor');
+        System.debug('-->Log 0: VertexResponseBatchable: Constructor');
         this.calloutResults = calloutResults;
         System.debug('-->Log 0: VertexResponseBatchable: Constructor: calloutResults::' + calloutResults);
      
