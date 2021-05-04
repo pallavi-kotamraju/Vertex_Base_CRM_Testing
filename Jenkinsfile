@@ -35,6 +35,8 @@ node {
 
                 //rct1 = bat returnStatus: true, script: "sfdx update"
                 rct1 = bat returnStatus: true, script: "sfdx plugins --core"
+                println 'rct1::'
+                 println rct1
                 //rct = bat returnStatus: true, script: "\"${toolbelt}/sfdx\" plugins --core"
                 
 
