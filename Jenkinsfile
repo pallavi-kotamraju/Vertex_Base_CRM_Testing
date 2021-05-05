@@ -33,7 +33,7 @@ node {
     withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]) {
         stage('Deploye Code') {
             if (isUnix()) {
-                rc = sh returnStatus: true, script: "sfdx force:auth:jwt:grant --clientid 3MVG9fe4g9fhX0E7aM1il19gyOLjsfMnkPZzySQaBQa0jug1i2zmugbB9q_e6KH2z5MLEiN4cGwG0mj8P1n2N --username VertexUnpackag@vertex.com --jwtkeyfile server.key --setdefaultdevhubusername --instanceurl https://login.salesforce.com"
+                rc = sh returnStatus: true, script: "${toolbelt} force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${jwt_key_file} --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
             }else{
                  rc = bat returnStatus: true, script: "sfdx force:auth:jwt:grant --clientid 3MVG9fe4g9fhX0E7aM1il19gyOLjsfMnkPZzySQaBQa0jug1i2zmugbB9q_e6KH2z5MLEiN4cGwG0mj8P1n2N --username VertexUnpackag@vertex.com --jwtkeyfile server.key --setdefaultdevhubusername --instanceurl https://login.salesforce.com"
             }
