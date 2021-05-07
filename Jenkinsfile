@@ -1,10 +1,15 @@
+
+node('e2e') {
+	println 'inside e2e'
+    stage('checkout') {
+	    println 'after stage checkout'
+        git credentialsId: 'basic-ssh', branch: 'master', url: 'git@github.com:vertexinc/connector-quality-java.git'
+	    println 'after git setup'
+    }
+/*
 #!groovy
 import groovy.json.JsonSlurperClassic
-node('e2e') {
-    stage('checkout') {
-        git credentialsId: 'basic-ssh', branch: 'master', url: 'git@github.com:vertexinc/connector-quality-java.git'
-    }
-/*node {
+node {
 
     def BUILD_NUMBER=env.BUILD_NUMBER
     def RUN_ARTIFACT_DIR="tests/${BUILD_NUMBER}"
