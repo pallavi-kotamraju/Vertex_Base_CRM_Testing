@@ -1,12 +1,4 @@
 
-node('e2e') {
-	println 'inside e2e'
-    stage('checkout') {
-	    println 'after stage checkout'
-        git credentialsId: 'basic-ssh', branch: 'master', url: 'git@github.com:vertexinc/connector-quality-java.git'
-	    println 'after git setup'
-    }
-/*
 #!groovy
 import groovy.json.JsonSlurperClassic
 node {
@@ -65,4 +57,4 @@ node {
         }
     }
 }
-*/
+
