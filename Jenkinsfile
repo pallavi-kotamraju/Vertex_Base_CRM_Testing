@@ -12,7 +12,7 @@ node {
  */
     def HUB_ORG='VertexUnpackag@vertex.com'
     def SFDC_HOST = 'https://login.salesforce.com'
-    def JWT_KEY_CRED_ID = 'be826d13-65ee-4683-9799-b59da813588c'
+    def JWT_KEY_CRED_ID = '941f2402-1a4e-4ad3-9bd5-fa37d53b9220'
     def CONNECTED_APP_CONSUMER_KEY='3MVG9fe4g9fhX0E7aM1il19gyONSw_MPAyMErufx1S4.pBcO4XU0PMOrVtQ7VFIuPHuPJnsP_gRzo0l43j747'
  
 	    //'3MVG9fe4g9fhX0E7aM1il19gyOEJCdRIBn5Hd8O8K.NZfkI2RxzfYqTySAw89vJx.H8zMUoUYv3dNM7YwYXET'
