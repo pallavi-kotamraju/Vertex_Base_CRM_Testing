@@ -64,6 +64,10 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
             printf rmsg
             println('Hello from a Job DSL script!')
             println(rmsg)
+		Stage('check the statis of deployment'){
+		rrmg = command "${toolbelt} force:mdapi:deploy:report -u ${HUB_ORG}"
+			if(rrmg !=0){error 'Deployment failed'}
+		}
 		
 		stage('Run Tests In Test Scratch Org') {
                 rc = command "${toolbelt} force:apex:test:run -u ${HUB_ORG}"
