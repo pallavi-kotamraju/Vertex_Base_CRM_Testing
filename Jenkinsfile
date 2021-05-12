@@ -37,7 +37,8 @@ node {
     }
 	  
 	
-	 
+	 ac = script = "sfdx force:org:list"
+	println ac
 	
 withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]) {
         println 'before sfdx'
