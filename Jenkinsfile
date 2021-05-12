@@ -38,7 +38,7 @@ node {
 	  
 	
 	 rr = script = "sfdx force:org:list"
-	 if (rc != 0) { error script }
+	 if (rc != 0) { error 'Above command failed at line 40' }
 	println rc
 	
 withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]) {
