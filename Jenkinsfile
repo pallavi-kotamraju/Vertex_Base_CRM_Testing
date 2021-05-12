@@ -65,14 +65,13 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
             println('Hello from a Job DSL script!')
             println(rmsg)
 		
-		stage('Create Test Scratch Org') {
-                rc = command "${toolbelt}/sfdx force:org:create --targetdevhubusername HubOrg --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
+		stage('Run Tests In Test Scratch Org') {
+                rc = command "${toolbelt}/sfdx force:apex:test:run"
                 if (rc != 0) {
-                    error 'Salesforce test scratch org creation failed.'			
+                    error 'Salesforce unit test run in test scratch org failed.'
                 }
-		else {
-			error 'Salesforce test scratch org creation sucess.'
-		}
+			else { error 'salesforce unit test run success'}
+            }
             }
         }
     }
