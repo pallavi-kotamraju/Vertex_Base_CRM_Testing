@@ -27,6 +27,8 @@ node {
   //  println SFDX_HOME
     println 'Multiple branch 1' 
     def toolbelt = tool 'toolbelt'
+	println 'toolblet****'
+	println toolblet
    
   
    
@@ -45,7 +47,7 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 	println jwt_key_file
 	//rc = script = "${toolbelt} force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${JWT_KEY_CRED_ID} --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
       // rc =  "sfdx force:org:list"
-	rc = script = "sfdx force:auth:jwt:grant --clientid 3MVG9fe4g9fhX0E7aM1il19gyONSw_MPAyMErufx1S4.pBcO4XU0PMOrVtQ7VFIuPHuPJnsP_gRzo0l43j747 --username VertexUnpackag@vertex.com --jwtkeyfile C:\openssl\bin\server.key --setdefaultdevhubusername --instanceurl https://login.salesforce.com"
+	rc = script = "${toolbelt}\sfdx force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${JWT_KEY_CRED_ID} --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
 	//rc = script = "C:\Program Files\Salesforce CLI\bin\sfdx force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${JWT_KEY_CRED_ID} --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
 	println 'After sfdx'         
 	//rc =  sh returnStdout: true, script: "${SFDX_HOME}/sfdx force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${jwt_key_file} --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
