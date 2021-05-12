@@ -64,6 +64,7 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
             printf rmsg
             println('Hello from a Job DSL script!')
             println(rmsg)
+		println rmsg
 		
 		if (isUnix()) {
 				rrsg = sh returnStdout: true, script: "${toolbelt} force:apex:test:run -u ${HUB_ORG} --wait 10"
