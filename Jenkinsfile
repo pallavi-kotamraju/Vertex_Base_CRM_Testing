@@ -28,7 +28,7 @@ node {
     println 'Multiple branch 1' 
     def toolbelt = tool 'toolbelt'
 	println 'toolblet****'
-	println toolbelt
+	//println toolbelt
    
   
    
