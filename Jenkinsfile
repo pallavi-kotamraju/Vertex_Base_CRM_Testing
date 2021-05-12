@@ -38,8 +38,8 @@ node {
 	  
 	
 	 rr = script = "sfdx force:org:list"
-	 if (rc != 0) { error 'Above command failed at line 40' }
-	println rc
+	 if (rr != 0) { error 'Above command failed at line 40' }
+	println rr
 	
 withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]) {
         println 'before sfdx'
