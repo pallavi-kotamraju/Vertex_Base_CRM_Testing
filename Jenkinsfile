@@ -37,9 +37,7 @@ node {
     }
 	  
 	
-	 rr = script = "sfdx force:org:list"
-	 if (rr != 0) { error 'Above command failed at line 40' }
-	println rr
+	 
 	
 withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]) {
         println 'before sfdx'
@@ -48,10 +46,11 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 	println 'After sfdx'         
 	//rc =  sh returnStdout: true, script: "${SFDX_HOME}/sfdx force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${jwt_key_file} --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
                 
-	}
-	 if (rc != 0) { error 'hub org authorization failed: BUt why ot failed' }
+ if (rc != 0) { error 'Above command failed' }
 	println rc
-			
+				
+}
+	
     
 			
 			// need to pull out assigned username
