@@ -74,9 +74,8 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
             printf rrsg
             println('Hello from a running test classes!')
             println(rrsg)
-		
-	
-		
+		if (rrsg != 0) { error 'Above command failed' }
+			
 		
             }
         }
