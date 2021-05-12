@@ -54,10 +54,15 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 	       
 		 if (rc != 0) { error 'Deb Hub Authorization failed' }
 			println rc
-		 if (rc1 != 0) { error 'Deployment command failed' }
-			println rc1
+		 
 			
-			// need to pull out assigned username
+		 if (isUnix()) {
+               rc = sh returnStatus: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG}"
+	 }
+		if (rc != 0) { error 'Deployment command failed' }
+			println rc
+		
+		// need to pull out assigned username
 			if (isUnix()) {
 				rmsg = sh returnStdout: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG}"
 			}else{
