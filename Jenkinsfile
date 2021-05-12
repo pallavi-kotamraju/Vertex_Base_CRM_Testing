@@ -12,7 +12,7 @@ node {
  */
    def HUB_ORG='test-dwb9l2gn5usn@example.com'
     def SFDC_HOST = 'https://login.salesforce.com'
-    def JWT_KEY_CRED_ID = '941f2402-1a4e-4ad3-9bd5-fa37d53b9220'
+    def JWT_KEY_CRED_ID = 'c90f4448-cd0a-43d2-8174-a0908a621323'
     def CONNECTED_APP_CONSUMER_KEY='3MVG9e2mBbZnmM6mBquZb6AU3G9JkVdhVyYWdlutBPutIFnpFiZ7qx3Rs5rgA1OYxMsZ4Pvfw9_8qcsxfw03C'
  
 	    //'3MVG9fe4g9fhX0E7aM1il19gyOEJCdRIBn5Hd8O8K.NZfkI2RxzfYqTySAw89vJx.H8zMUoUYv3dNM7YwYXET'
@@ -41,6 +41,7 @@ node {
 	
 withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]) {
         println 'before sfdx'
+	println jwt_key_file
 	//rc = script = "${toolbelt} force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${JWT_KEY_CRED_ID} --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
         rc = script = "sfdx force:org:list"
 	println 'After sfdx'         
