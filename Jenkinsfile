@@ -66,11 +66,11 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
             println(rmsg)
 		
 		stage('Run Tests In Test Scratch Org') {
-                rc = command "${toolbelt}/sfdx force:apex:test:run -u ${HUB_ORG}"
+                rc = command "${toolbelt} force:apex:test:run -u ${HUB_ORG}"
                 if (rc != 0) {
                     error 'Salesforce unit test run in test scratch org failed.'
                 }
-			else { error 'salesforce unit test run success'}
+			
             }
             }
         }
