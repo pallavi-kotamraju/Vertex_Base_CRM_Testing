@@ -57,10 +57,11 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 		 
 			
 		 if (isUnix()) {
-               rc = sh returnStatus: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG} --wait 5"
+               rmsg  = sh returnStatus: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG} --wait 5"
 	 }
-		if (rc != 0) { error 'Deployment command failed' }
-			println rc
+		println 'rmsg:::' 
+		if (rmsg  != 0) { error 'Deployment command failed' }
+			println rmsg 
 		
 		/*// need to pull out assigned username
 			if (isUnix()) {
