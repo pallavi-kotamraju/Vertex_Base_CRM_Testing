@@ -65,18 +65,9 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
             println('Hello from a Job DSL script!')
             println(rmsg)
 		
-		
-		rrmg = sh returnStdout: true, script: "${toolbelt} force:mdapi:deploy:report -u ${HUB_ORG}"
-			if(rrmg !=0){error 'Deployment failed'}
 	
 		
-		stage('Run Tests In Test Scratch Org') {
-                rc = command "${toolbelt} force:apex:test:run -u ${HUB_ORG}"
-                if (rc != 0) {
-                    error 'Salesforce unit test run in test scratch org failed.'
-                }
-			
-            }
+		
             }
         }
     }
