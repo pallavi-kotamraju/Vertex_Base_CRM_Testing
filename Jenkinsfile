@@ -46,7 +46,7 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 	println jwt_key_file
 	 if (isUnix()) {
                 rc = sh returnStatus: true, script: "${toolbelt} sfdx force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${jwt_key_file} --setdefaultdevhubusername --instanceurl ${SFDC_HOST} --setalias HubOrg"
-         	rc1 = sh returnStatus: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG}"
+         	//rc1 = sh returnStatus: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG}"
 	 }else{
                  rc = bat returnStatus: true, script: "\"${toolbelt}\" force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile \"${jwt_key_file}\" --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
             }
@@ -56,13 +56,13 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 			println rc
 		 
 			
-		 if (isUnix()) {
+		/* if (isUnix()) {
                rmsg  = sh returnStatus: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG} --wait 5"
 	 }
 		println 'rmsg:::' 
 		if (rmsg  != 0) { error 'Deployment command failed' }
 			println rmsg 
-		
+		*/
 		/*// need to pull out assigned username
 			if (isUnix()) {
 				rmsg = sh returnStdout: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG} --wait 5"
