@@ -56,25 +56,14 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 			println rc
 		 
 			
-		/* if (isUnix()) {
-               rmsg  = sh returnStatus: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG} --wait 5"
+		 if (isUnix()) {
+               rmsg  = sh returnStdout: true, script: "${toolbelt} force:apex:test:run -u ${HUB_ORG} --wait 10"
 	 }
 		println 'rmsg:::' 
 		if (rmsg  != 0) { error 'Deployment command failed' }
 			println rmsg 
-		*/
-		/*// need to pull out assigned username
-			if (isUnix()) {
-				rmsg = sh returnStdout: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG} --wait 5"
-			}else{
-			   rmsg = bat returnStdout: true, script: "\"${toolbelt}\" force:mdapi:deploy -d manifest/. -u ${HUB_ORG} --wait 5"
-			}
-			  
-            printf rmsg
-            println('Hello from a Job DSL script!')
-            println(rmsg)
-		println rmsg
-		if (rmsg != 0) { error 'Deploymentcommand failed' }
+		
+		/*
 		
 		if (isUnix()) {
 				rrsg = sh returnStdout: true, script: "${toolbelt} force:apex:test:run -u ${HUB_ORG} --wait 10"
