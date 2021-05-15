@@ -36,17 +36,24 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
         println 'before sfdx'
 	println jwt_key_file
 	 if (isUnix()) {
+		 println 'PP>01' rc
+		 println rc
                 rc = sh returnStatus: true, script: "${toolbelt} sfdx force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${jwt_key_file} --setdefaultdevhubusername --instanceurl ${SFDC_HOST} --setalias HubOrg"
          	//rc1 = sh returnStatus: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG}"
+		 println 'PP>02'
+		 println rc
 	 }else{
+		 println 'PP>03'
+		 println rc
                  rc = bat returnStatus: true, script: "\"${toolbelt}\" force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile \"${jwt_key_file}\" --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
-            }
-		println 'After sfdx'         
+         	println 'PP>04'
+		 println rc
+	 }
 	       
 		 if (rc != 0) { error 'Deb Hub Authorization failed' }
 			println rc
 		
-		stage('Create Test Scratch Org') {
+	/*	stage('Create Test Scratch Org') {
 			println '******Before Scrtach Rc******* '
 			rc = command ""\"${toolbelt}\" force:org:create --targetdevhubusername HubOrg --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
 			println '******After Scrtach Rc******* '
@@ -55,7 +62,7 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 					error 'Salesforce test scratch org creation failed.'
 				     }
 		}
-		
+		**/
 		/*stage('Run test class') {   
 			println 'Before Test sfdx'  
 		 if (isUnix()) {
