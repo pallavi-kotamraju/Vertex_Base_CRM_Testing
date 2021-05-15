@@ -54,14 +54,19 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 	       
 		 if (rc != 0) { error 'Deb Hub Authorization failed' }
 			println rc
-		 
-			
+		
+		stage('Run test class') {   
+			println 'After sfdx'  
 		 if (isUnix()) {
-               rmsg  = sh returnStdout: true, script: "${toolbelt} force:apex:test:run -u ${HUB_ORG} --wait 10"
-	 }
+              		 rmsg  = bat  returnStdout: true, script: "${toolbelt} force:apex:test:run -u ${HUB_ORG} --wait 10"
+				}
 		println 'rmsg:::' 
+		println rmsg 
+		println 'After sfdx'  
 		if (rmsg  != 0) { error 'Deployment command failed' }
 			println rmsg 
+    		} 
+		
 		
 		/*
 		
