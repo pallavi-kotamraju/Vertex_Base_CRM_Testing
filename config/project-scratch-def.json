@@ -4,7 +4,7 @@
   "adminEmail": "pallavi_kotamraju@persisetent.com",
   "description": "This org is to use for Jenkins CI/CD",
   "hasSampleData": "true",
-  "features": ["EnableSetPasswordInApi"],["ContactsToMultipleAccounts"]
+  "features": ["EnableSetPasswordInApi"],["enableRelateContactToMultipleAccounts"]
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
