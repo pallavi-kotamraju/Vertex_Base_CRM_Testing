@@ -53,7 +53,7 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 		
 		stage('Create Test Scratch Org') {
 			println '******Before Scrtach Rc******* '
-			rc = bat returnStatus: true, script: "\"${toolbelt}\" force:org:create --targetdevhubusername HubOrg --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
+			rc = bat returnStatus: true, script: "\"${toolbelt}\" force:org:create --targetdevhubusername ${HUB_ORG} --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
 			println '******After Scrtach Rc******* '
 			println rc
 			if (rc != 0) {
