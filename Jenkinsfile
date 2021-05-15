@@ -51,16 +51,16 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 		 if (rc != 0) { error 'Deb Hub Authorization failed' }
 			println rc
 		
-	/*	stage('Create Test Scratch Org') {
+		stage('Create Test Scratch Org') {
 			println '******Before Scrtach Rc******* '
-			rc = command ""\"${toolbelt}\" force:org:create --targetdevhubusername HubOrg --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
+			rc = bat returnStatus: true, script: "\"${toolbelt}\" force:org:create --targetdevhubusername HubOrg --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
 			println '******After Scrtach Rc******* '
 			println rc
 			if (rc != 0) {
 					error 'Salesforce test scratch org creation failed.'
 				     }
 		}
-		**/
+		
 		/*stage('Run test class') {   
 			println 'Before Test sfdx'  
 		 if (isUnix()) {
