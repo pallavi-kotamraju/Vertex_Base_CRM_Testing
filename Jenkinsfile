@@ -29,17 +29,8 @@ node {
     def toolbelt = tool 'toolbelt'
 	println 'toolblet****'
 	//println toolbelt
+    
    
-  
-   
-   
-  stage('checkout source') {
-        // when running in multi-branch job, one must issue this command
-        checkout scm
-    }
-	  
-	
-	
 withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]) {
 	stage('Deploye Code') {
         println 'before sfdx'
@@ -55,17 +46,27 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 		 if (rc != 0) { error 'Deb Hub Authorization failed' }
 			println rc
 		
-		stage('Run test class') {   
-			println 'After sfdx'  
+		stage('Create Test Scratch Org') {
+			println '******Before Scrtach Rc******* '
+			rc = command "${toolbelt}/sfdx force:org:create --targetdevhubusername HubOrg --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
+			println '******After Scrtach Rc******* '
+			println rc
+			if (rc != 0) {
+					error 'Salesforce test scratch org creation failed.'
+				     }
+		}
+		
+		/*stage('Run test class') {   
+			println 'Before Test sfdx'  
 		 if (isUnix()) {
               		 rmsg  = bat  returnStdout: true, script: "${toolbelt} force:apex:test:run -u ${HUB_ORG} --wait 10"
 				}
 		println 'rmsg:::' 
 		println rmsg 
-		println 'After sfdx'  
+		println 'After  Test sfdx'  
 		if (rmsg  != 0) { error 'Deployment command failed' }
 			println rmsg 
-    		} 
+    		} */
 		
 		
 		/*
