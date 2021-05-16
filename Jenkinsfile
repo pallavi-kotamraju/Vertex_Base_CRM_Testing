@@ -55,11 +55,15 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 			println '******Before Scrtach Rc******* '
 			rc = bat returnStatus: true, script: "\"${toolbelt}\" force:org:create --targetdevhubusername ${HUB_ORG} --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
 			rrsg = bat returnStatus: true, script: "\"${toolbelt}\" force:apex:test:run -u ${HUB_ORG} --wait 10"
+			rrss = bat returnStatus: true, script: "\"${toolbelt}\" force:mdapi:deploy -d manifest/. -u test-fo73n5ebdiz4@example.com"
+			
 			println '******After Scrtach Rc******* '
 			println 'rc::'
 			println rc
 			println 'rrsg::'
 			println rrsg
+			println 'rrss::'
+			println rrss
 			if (rc != 0) {
 					error 'Salesforce test scratch org creation failed.'
 				     }
