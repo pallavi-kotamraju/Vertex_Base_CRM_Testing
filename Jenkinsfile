@@ -58,7 +58,7 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 			println '******Before Scrtach Rc******* '
 			rc = bat returnStatus: true, script: "\"${toolbelt}\" force:org:create --targetdevhubusername ${HUB_ORG} --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
 			rrsg = bat returnStatus: true, script: "\"${toolbelt}\" force:apex:test:run -u ${HUB_ORG} --wait 10"
-			rrss = bat returnStatus: true, script: "\"${toolbelt}\" force:mdapi:deploy -d manifest/. -u test-fo73n5ebdiz4@example.com"
+			rrss = bat returnStatus: true, script: "\"${toolbelt}\" force:mdapi:deploy -d manifest/. -u ${HUB_ORG}"			
 			
 			println '******After Scrtach Rc******* '
 			println 'rc::'
