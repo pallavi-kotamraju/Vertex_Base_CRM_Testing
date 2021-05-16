@@ -64,20 +64,30 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 		stage('Create Test Scratch Org') {
 			println '******Before Scrtach Rc******* '
 			rc = bat returnStatus: true, script: "\"${toolbelt}\" force:org:create --targetdevhubusername ${HUB_ORG} --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
-			rrsg = bat returnStatus: true, script: "\"${toolbelt}\" force:apex:test:run -u ${HUB_ORG} --wait 10"
-			rrss = bat returnStatus: true, script: "\"${toolbelt}\" force:mdapi:deploy -d manifest/. -u ${HUB_ORG}"			
+			rrss = bat returnStatus: true, script: "\"${toolbelt}\" force:mdapi:deploy -d manifest/. -u ${HUB_ORG}"	
+			rrst = bat returnStatus: true, script: "\"${toolbelt}\" force:mdapi:deploy:report"	
+			rrsu = bat returnStatus: true, script: "\"${toolbelt}\" force:apex:test:run -u ${HUB_ORG} --wait 10"
+					
 			
 			println '******After Scrtach Rc******* '
 			println 'rc::'
 			println rc
-			println 'rrsg::'
-			println rrsg
 			println 'rrss::'
 			println rrss
+			println 'rrst::'
+			println rrst
+			println 'rrsu::'
+			println rrsu
 			if (rc != 0) {
 					error 'Salesforce test scratch org creation failed.'
 				     }
-			if (rrsg != 0) {
+			if (rrss != 0) {
+					error 'Salesforce deploy failed.'
+				     }
+			if (rrst != 0) {
+					error 'Salesforce report failed.'
+				     }
+			if (rrsu != 0) {
 					error 'Salesforce run test class failed.'
 				     }
 		}
