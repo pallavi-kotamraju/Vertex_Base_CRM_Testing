@@ -10,13 +10,13 @@ node {
     def JWT_KEY_CRED_ID = env.JWT_CRED_ID_DH
     def CONNECTED_APP_CONSUMER_KEY=env.CONNECTED_APP_CONSUMER_KEY_DH
  */
-   def HUB_ORG='VertexUnpackag@vertex.com' 
+   def HUB_ORG='pallavi_kotamraju@brave-fox-buqdw3.com' 
 	   //'pallavi_kotamraju@brave-fox-buqdw3.com'
 	   //'VertexUnpackag@vertex.com'
     def SFDC_HOST = 'https://login.salesforce.com'
     def JWT_KEY_CRED_ID = '946f707b-596a-4f47-8959-68b5f4690782'
 	    //'c90f4448-cd0a-43d2-8174-a0908a621323'
-    def CONNECTED_APP_CONSUMER_KEY= '3MVG9fe4g9fhX0E7aM1il19gyONSw_MPAyMErufx1S4.pBcO4XU0PMOrVtQ7VFIuPHuPJnsP_gRzo0l43j747'
+    def CONNECTED_APP_CONSUMER_KEY= '3MVG92mNMNiWvoniqOU7.plyofM5EJ5PKuAcsd0QL_AxwQXLMVcxBC6_O7ZKysh_OZ2QnZCplmcZzepj8K49a'
 	//3MVG92mNMNiWvoniqOU7.plyofM5EJ5PKuAcsd0QL_AxwQXLMVcxBC6_O7ZKysh_OZ2QnZCplmcZzepj8K49a ****************pallavi_kotamraju@brave-fox-buqdw3.com
 	    //'3MVG92mNMNiWvongF1dlvpthn1iAzke5fE6AKFYIE_QQbdY5w.mvTN9vQ4lBHP0HJebdo8w_I.8TNr4UVDzwn' ************pallavi_inclass@psl.com
 	    //'3MVG9fe4g9fhX0E7aM1il19gyONSw_MPAyMErufx1S4.pBcO4XU0PMOrVtQ7VFIuPHuPJnsP_gRzo0l43j747'
@@ -67,9 +67,12 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 		stage('Create Test Scratch Org') {
 			println '******Before Scrtach Rc******* '
 			rc = bat returnStatus: true, script: "\"${toolbelt}\" force:org:create --targetdevhubusername ${HUB_ORG} --setdefaultusername --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1"
+			rsv = bat returnStatus: true, script: "\"${toolbelt}\" force:source:push  -u ${HUB_ORG}"
 			rrss = bat returnStatus: true, script: "\"${toolbelt}\" force:mdapi:deploy -d manifest/. -u ${HUB_ORG} --wait 10"	
 			rrst = bat returnStatus: true, script: "\"${toolbelt}\" force:mdapi:deploy:report -u ${HUB_ORG}"	
 			rrsu = bat returnStatus: true, script: "\"${toolbelt}\" force:apex:test:run -u ${HUB_ORG}  --codecoverage -w 60 -r human -d test-reports --verbose --wait 10"
+			
+			
 			
 			println '******After Scrtach Rc******* '
 			println 'rc::'
@@ -80,6 +83,11 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 			println rrst
 			println 'rrsu::'
 			println rrsu
+			println 'rrsv::'
+			println rrsv
+			if (rrsu != 0) {
+					error 'Salesforce run test class failed.'
+				     }
 			if (rc != 0) {
 					error 'Salesforce test scratch org creation failed.'
 				     }
@@ -89,9 +97,7 @@ withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]
 			if (rrst != 0) {
 					error 'Salesforce report failed.'
 				     }
-			if (rrsu != 0) {
-					error 'Salesforce run test class failed.'
-				     }
+			
 		}
 		
 		/*stage('Run test class') {   
