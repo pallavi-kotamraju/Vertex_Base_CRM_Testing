@@ -1,5 +1,5 @@
 {
- "packageDirectories": [
+  "packageDirectories": [
     {
       "path": "force-app",
       "default": true
@@ -8,18 +8,4 @@
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "45.0"
-  "orgName": "Scratch Org Demo",
-  "edition": "Developer",
-  "adminEmail": "pallavi_kotamraju@persisetent.com",
-  "description": "This org is to use for Jenkins CI/CD",
-  "hasSampleData": "true",
-  "features": ["EnableSetPasswordInApi", "enableRelateContactToMultipleAccounts", "ContactsToMultipleAccounts"] 
-  "settings": {
-    "lightningExperienceSettings": {
-      "enableS1DesktopEnabled": true
-    },
-    "mobileSettings": {
-      "enableS1EncryptedStoragePref2": false
-    }
-  }
 }
