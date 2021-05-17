@@ -1,4 +1,13 @@
 {
+ "packageDirectories": [
+    {
+      "path": "force-app",
+      "default": true
+    }
+  ],
+  "namespace": "",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "45.0"
   "orgName": "Scratch Org Demo",
   "edition": "Developer",
   "adminEmail": "pallavi_kotamraju@persisetent.com",
